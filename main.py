@@ -1,1 +1,2 @@
-import src.genetico
+"Main module"
+#import src.genetico
