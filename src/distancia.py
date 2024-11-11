@@ -1,23 +1,25 @@
 import math
 
 
-def distancia(lat1, lon1, lat2, lon2):
-    # Converte latitude e longitude de graus para radianos
-    lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
+def distancia(cidade1, cidade2):
+    # Convertendo as coordenadas de graus para radianos
+    lat1, lon1 = math.radians(cidade1[0]), math.radians(cidade1[1])
+    lat2, lon2 = math.radians(cidade2[0]), math.radians(cidade2[1])
 
-    # Calcula a diferença entre as coordenadas
-    dLat = lat2 - lat1
-    dLon = lon2 - lon1
+    # Diferenças entre latitudes e longitudes
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
 
-    # Aplica a fórmula de Haversine
-    a = math.sin(dLat / 2)**2 + math.cos(lat1) * \
-        math.cos(lat2) * math.sin(dLon / 2)**2
+    # Fórmula de Haversine
+    a = math.sin(dlat / 2) ** 2 + math.cos(lat1) * \
+        math.cos(lat2) * math.sin(dlon / 2) ** 2
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
-    # Raio médio da Terra em quilômetros
-    raio = 6371.0
-    distancia = raio * c
+    # Raio da Terra em quilômetros
+    R = 6371.0
 
+    # Distância entre as duas cidades
+    distancia = R * c
     return distancia
 
 
