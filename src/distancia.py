@@ -1,20 +1,18 @@
 """Modulo para calcular distancias"""
 import math
 
-
 def distancia(cep1, cep2):
-    """Usa a formula de harversine para calcular a distancia"""
+    """Usa a fórmula de Haversine para calcular a distância"""
     # Convertendo as coordenadas de graus para radianos
-    lat1, lon1 = math.radians(cep1[0]), math.radians(cep1[1])
-    lat2, lon2 = math.radians(cep2[0]), math.radians(cep2[1])
+    lat1, lon1 = math.radians(cep1[1]), math.radians(cep1[0])
+    lat2, lon2 = math.radians(cep2[1]), math.radians(cep2[0])
 
     # Diferenças entre latitudes e longitudes
     dlat = lat2 - lat1
     dlon = lon2 - lon1
 
     # Fórmula de Haversine
-    a = math.sin(dlat / 2) ** 2 + math.cos(lat1) * \
-        math.cos(lat2) * math.sin(dlon / 2) ** 2
+    a = math.sin(dlat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
     # Raio da Terra em quilômetros
