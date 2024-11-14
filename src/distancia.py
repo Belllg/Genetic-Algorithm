@@ -27,6 +27,8 @@ def distancia(cep1, cep2):
 
 def calcular_distancia_total(rota, ceps):
     """Calcula a distancia de todas as rotas"""
+    if not rota:  # Verifica se a lista está vazia
+        return 0
     distancia_total = 0
     for i in range(len(rota) - 1):
         distancia_total += distancia(ceps[rota[i]], ceps[rota[i + 1]])

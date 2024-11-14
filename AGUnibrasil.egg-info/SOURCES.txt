@@ -1,0 +1,10 @@
+LICENSE
+setup.py
+AGUnibrasil.egg-info/PKG-INFO
+AGUnibrasil.egg-info/SOURCES.txt
+AGUnibrasil.egg-info/dependency_links.txt
+AGUnibrasil.egg-info/top_level.txt
+src/__init__.py
+src/distancia.py
+src/genetico.py
+tests/test_distancia.py
