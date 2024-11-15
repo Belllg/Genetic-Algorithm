@@ -1,7 +1,5 @@
 from src.distancia import distancia, calcular_distancia_total
 import unittest
-from typing import List
-
 
 class TestDistancia(unittest.TestCase):
     """Testando a funcao distancia"""

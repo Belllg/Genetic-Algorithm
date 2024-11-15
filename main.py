@@ -1,7 +1,7 @@
 "Classe principal de algoritmo genetico"
 import time
 from src.genetico import AlgoritmoGenetico
-from data.csvManager import CoordenadasCSV
+from src.csvManager import CoordenadasCSV
 
 inicio = time.time()
 
