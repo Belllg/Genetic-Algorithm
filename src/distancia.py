@@ -4,8 +4,8 @@ import math
 def distancia(cep1, cep2):
     """Usa a fórmula de Haversine para calcular a distância"""
     # Convertendo as coordenadas de graus para radianos
-    lat1, lon1 = math.radians(cep1[1]), math.radians(cep1[0])
-    lat2, lon2 = math.radians(cep2[1]), math.radians(cep2[0])
+    lat1, lon1 = math.radians(cep1[1]), math.radians(cep1[2])
+    lat2, lon2 = math.radians(cep2[1]), math.radians(cep2[2])
 
     # Diferenças entre latitudes e longitudes
     dlat = lat2 - lat1

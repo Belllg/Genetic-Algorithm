@@ -21,14 +21,15 @@ class AlgoritmoGenetico:
         self.populacao = self.criar_populacao_inicial()
 
     def criar_populacao_inicial(self):
-        """Cria a população inicial composta por rotas embaralhadas."""
+        """Cria a população inicial composta por rotas embaralhadas, garantindo unicidade."""
         populacao_inicial = []
-        
-        for _ in range(self.tamanho_populacao):
+        while len(populacao_inicial) < self.tamanho_populacao:
             rota = random.sample(range(len(self.ceps)), len(self.ceps))
-            populacao_inicial.append(rota)
-        
+            if rota not in populacao_inicial:
+                populacao_inicial.append(rota)
         return populacao_inicial
+
+
 
     def crossover(self, pai1, pai2):
         """Função de crossover para gerar um filho"""

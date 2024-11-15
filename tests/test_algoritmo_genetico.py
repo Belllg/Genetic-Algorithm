@@ -6,20 +6,22 @@ class TestAlgoritmoGenetico(unittest.TestCase):
 
     def setUp(self):
         """Configura o ambiente antes de cada teste."""
-        self.ceps = [(0, 0), (1, 1), (2, 2), (3, 3), (4, 4)]
+        self.ceps = [(1, 0, 0), (2, 1, 1), (3, 2, 2), (4, 3, 3), (5, 4, 4)]
         self.tamanho_populacao = 10
         self.geracoes = 5
         self.taxa_mutacao = 0.1
-        self.algoritmo = AlgoritmoGenetico(self.ceps, self.tamanho_populacao, self.geracoes, self.taxa_mutacao)
+        self.taxa_genes_antigos=0.8
+        self.algoritmo = AlgoritmoGenetico(self.ceps, self.tamanho_populacao, self.geracoes, self.taxa_mutacao, self.taxa_genes_antigos)
 
     def test_criar_populacao_inicial(self):
         """Testa se a população inicial tem o tamanho correto e se as rotas são únicas."""
         populacao_inicial = self.algoritmo.criar_populacao_inicial()
         self.assertEqual(len(populacao_inicial), self.tamanho_populacao)
         
-        # Verifica se todas as rotas são diferentes
+        # Verifica se todas as rotas são diferentes (usando tuplas para comparação)
         rotas_unicas = len(populacao_inicial) == len(set(tuple(rota) for rota in populacao_inicial))
         self.assertTrue(rotas_unicas)
+
 
     @patch('src.distancia.calcular_distancia_total')
     def test_fitness(self, mock_calcular_distancia):
@@ -44,9 +46,9 @@ class TestAlgoritmoGenetico(unittest.TestCase):
 
     def test_mutacao(self):
         """Testa se a função de mutação está alterando a rota de forma correta."""
-        rota = [0, 1, 2, 3, 4]
+        rota = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
         rota_original = rota[:]
-        self.algoritmo.taxa_mutacao = 1.0 
+        self.algoritmo.taxa_mutacao = 5.0 
         self.algoritmo.mutacao(rota)
         
         # Verifica se a rota foi alterada, mas mantém o mesmo tamanho
