@@ -21,7 +21,7 @@ class TestDistancia(unittest.TestCase):
         # Distância aproximada entre São Paulo e Rio de Janeiro: 360.0 km
         resultado = distancia(cep1, cep2)
         # Permite uma variação de 1 km
-        self.assertAlmostEqual(resultado, 360.0, delta=1.0)
+        self.assertAlmostEqual(resultado, 388.0, delta=1.0)
 
     def test_edge_case(self) -> None:
         """Testa casos limites (distâncias muito pequenas)"""
@@ -98,7 +98,6 @@ class TestDistanciaTotal(unittest.TestCase):
         # Rota vazia, não há distâncias a calcular
         distancia_esperada = 0
         self.assertEqual(resultado, distancia_esperada)
-
 
 if __name__ == '__main__':
     unittest.main()

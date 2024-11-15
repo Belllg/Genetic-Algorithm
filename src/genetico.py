@@ -1,10 +1,10 @@
 """Modulo com funções de distancia"""
 import random
-from distancia import calcular_distancia_total
+from src.distancia import calcular_distancia_total
 
 class AlgoritmoGenetico:
-    """Classe do algoritmo genetico"""
-    def __init__(self, ceps, tamanho_populacao, geracoes, taxa_mutacao):
+    """Classe do algoritmo genético"""
+    def __init__(self, ceps, tamanho_populacao, geracoes, taxa_mutacao, taxa_genes_antigos):
         """
         Inicializa o Algoritmo Genético com os parâmetros fornecidos.
         
@@ -17,13 +17,18 @@ class AlgoritmoGenetico:
         self.tamanho_populacao = tamanho_populacao
         self.geracoes = geracoes
         self.taxa_mutacao = taxa_mutacao
+        self.taxa_genes_antigos = taxa_genes_antigos
         self.populacao = self.criar_populacao_inicial()
 
-    def criar_rota(self):
-        """Embaralha rotas dos pais"""
-        rota = list(range(len(self.ceps)))
-        random.shuffle(rota)
-        return rota
+    def criar_populacao_inicial(self):
+        """Cria a população inicial composta por rotas embaralhadas."""
+        populacao_inicial = []
+        
+        for _ in range(self.tamanho_populacao):
+            rota = random.sample(range(len(self.ceps)), len(self.ceps))
+            populacao_inicial.append(rota)
+        
+        return populacao_inicial
 
     def crossover(self, pai1, pai2):
         """Função de crossover para gerar um filho"""
@@ -44,32 +49,33 @@ class AlgoritmoGenetico:
                 j = random.randint(0, len(rota) - 1)
                 rota[i], rota[j] = rota[j], rota[i]
 
-    def selecao(self):
-        """Função para selecionar as melhores rotas com base na distância"""
-        populacao_ordenada = sorted(
-            self.populacao, key=lambda rota: calcular_distancia_total(rota, self.ceps)
-        )
-        return populacao_ordenada[:len(self.populacao) // 2]
-
-    def criar_populacao_inicial(self):
-        """Cria a população inicial de rotas embaralhadas"""
-        return [self.criar_rota() for _ in range(self.tamanho_populacao)]
+    def fitness(self):
+        """Calcula a aptidão de cada rota e retorna uma população ordenada pela aptidão"""
+        return sorted(self.populacao, key=lambda rota: calcular_distancia_total(rota, self.ceps))
 
     def evoluir_populacao(self):
-        """Evolui a população através de crossover e mutação"""
+        """Evolui a população através de elitismo, crossover e mutação, com 20% da população gerada aleatoriamente."""
         melhor_rota_encontrada = None
         menor_distancia = float('inf')
 
         for _ in range(self.geracoes):
-            # Seleciona a metade superior da população
-            self.populacao = self.selecao()
+            # Ordena a população pela aptidão (menor distância)
+            populacao_ordenada = self.fitness()
 
-            nova_populacao = []
-            while len(nova_populacao) < self.tamanho_populacao:
-                pai1, pai2 = random.sample(self.populacao, 2)
+            # Seleciona os dois melhores indivíduos (elitismo)
+            nova_populacao = populacao_ordenada[:2]
+            pai1, pai2 = nova_populacao[0], nova_populacao[1]  # Pais já estão na nova_populacao
+            
+            # Gera o restante da nova população com crossover e mutação
+            while len(nova_populacao) < self.tamanho_populacao * self.taxa_genes_antigos:  # % da população vem de crossover e mutação
                 filho = self.crossover(pai1, pai2)
                 self.mutacao(filho)
                 nova_populacao.append(filho)
+
+            # Gera a população restante aleatoriamente
+            while len(nova_populacao) < self.tamanho_populacao:
+                rota_aleatoria = random.sample(range(len(self.ceps)), len(self.ceps))
+                nova_populacao.append(rota_aleatoria)
 
             self.populacao = nova_populacao
 
