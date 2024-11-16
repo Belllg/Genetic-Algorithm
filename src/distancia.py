@@ -1,7 +1,7 @@
 """Modulo para calcular distancias"""
 import math
 
-def distancia(cep1, cep2):
+def calcularDistancia(cep1, cep2):
     """Usa a fórmula de Haversine para calcular a distância"""
     # Convertendo as coordenadas de graus para radianos
     lat1, lon1 = math.radians(cep1['latitude']), math.radians(cep1['longitude'])
@@ -29,7 +29,7 @@ def calcular_distancia_total(rota, ceps):
         return 0
     distancia_total = 0
     for i in range(len(rota) - 1):
-        distancia_total += distancia(ceps[rota[i]], ceps[rota[i + 1]])
+        distancia_total += calcularDistancia(ceps[rota[i]], ceps[rota[i + 1]])
     # Retornar à cep de origem
-    distancia_total += distancia(ceps[rota[-1]], ceps[rota[0]])
+    distancia_total += calcularDistancia(ceps[rota[-1]], ceps[rota[0]])
     return distancia_total
