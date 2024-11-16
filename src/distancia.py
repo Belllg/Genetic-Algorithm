@@ -24,12 +24,17 @@ def distancia(cep1, cep2):
 
 
 def calcular_distancia_total(rota, ceps):
-    """Calcula a distancia de todas as rotas"""
-    if not rota:  # Verifica se a lista está vazia
-        return 0
+    """Calcula a distância total da rota, garantindo que todas as distâncias entre pontos sejam menores que 15 km."""
     distancia_total = 0
     for i in range(len(rota) - 1):
-        distancia_total += distancia(ceps[rota[i]], ceps[rota[i + 1]])
-    # Retornar à cep de origem
-    distancia_total += distancia(ceps[rota[-1]], ceps[rota[0]])
+        # Verifica a distância entre os pontos consecutivos
+        dist = distancia(ceps[rota[i]], ceps[rota[i + 1]])
+        if dist > 15:  # Se a distância for maior que 15 km, a rota é inválida
+            return float('inf')  # Retorna infinito, indicando que a rota não é viável
+        distancia_total += dist
+    # Também verifica a distância entre o último e o primeiro ponto
+    dist = distancia(ceps[rota[-1]], ceps[rota[0]])
+    if dist > 15:  # Verifica a última distância da rota
+        return float('inf')
+    distancia_total += dist
     return distancia_total

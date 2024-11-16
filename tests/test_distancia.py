@@ -1,6 +1,7 @@
 from src.distancia import distancia, calcular_distancia_total
 import unittest
 
+#FIXME REFAZER 
 class TestDistancia(unittest.TestCase):
     """Testando a funcao distancia"""
 
