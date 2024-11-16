@@ -21,54 +21,38 @@ class AlgoritmoGenetico:
         self.populacao = self.criar_populacao_inicial()
 
     def criar_populacao_inicial(self):
-        """Cria a população inicial composta por rotas válidas (distâncias menores que 15 km)."""
+        """Cria a população inicial composta por rotas embaralhadas, garantindo unicidade."""
         populacao_inicial = []
         while len(populacao_inicial) < self.tamanho_populacao:
             rota = random.sample(range(len(self.ceps)), len(self.ceps))
-            # Garante que a distância entre todos os pontos na rota seja menor que 15 km
-            if calcular_distancia_total(rota, self.ceps) != float('inf') and rota not in populacao_inicial:
+            if rota not in populacao_inicial:
                 populacao_inicial.append(rota)
         return populacao_inicial
 
 
+
     def crossover(self, pai1, pai2):
-        """Função de crossover para gerar um filho, com verificação de distâncias."""
+        """Função de crossover para gerar um filho"""
         inicio = random.randint(0, len(pai1) - 2)
         fim = random.randint(inicio, len(pai1) - 1)
         filho = pai1[inicio:fim]
 
-        # Adiciona os pontos de pai2 que não estão no filho
+        # Adiciona ceps de pai2 que não estão no filho
         for cep in pai2:
             if cep not in filho:
                 filho.append(cep)
-
-        # Verifica se a rota gerada é válida, caso contrário, gera outra
-        while calcular_distancia_total(filho, self.ceps) == float('inf'):
-            filho = self.crossover(pai1, pai2)  # Gera uma nova rota válida
-
         return filho
 
     def mutacao(self, rota):
         """Função de mutação para alterar uma rota ligeiramente"""
-        # Alterando dois pontos aleatórios na rota
-        j=0
         for i, _ in enumerate(rota):
             if random.random() < self.taxa_mutacao:
                 j = random.randint(0, len(rota) - 1)
                 rota[i], rota[j] = rota[j], rota[i]
 
-        # Garantir que a mutação resulta em uma rota válida (distância menor que 15km entre pontos consecutivos)
-        for i in range(len(rota) - 1):
-            distancia_atual = calcular_distancia_total([rota[i], rota[i + 1]], self.ceps)
-            if distancia_atual > 15:  # Se a distância entre dois pontos for maior que 15km, desfaça a troca
-                rota[i], rota[j] = rota[j], rota[i]  # Reverte a mutação
-                break  # Não precisa continuar após reverter
-
-
     def fitness(self):
-        """Calcula a aptidão de cada rota e retorna uma população ordenada pela aptidão."""
+        """Calcula a aptidão de cada rota e retorna uma população ordenada pela aptidão"""
         return sorted(self.populacao, key=lambda rota: calcular_distancia_total(rota, self.ceps))
-
 
     def evoluir_populacao(self):
         """Evolui a população através de elitismo, crossover e mutação, com 20% da população gerada aleatoriamente."""
