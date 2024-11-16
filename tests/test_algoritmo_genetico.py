@@ -2,6 +2,17 @@ import unittest
 from unittest.mock import patch
 from src.genetico import AlgoritmoGenetico
 
+
+#FIXME
+#FIXME
+#FIXME
+#FIXME
+#FIXME
+#FIXME
+#FIXME
+#FIXME
+#FIXME
+#FIXME
 class TestAlgoritmoGenetico(unittest.TestCase):
 
     def setUp(self):
