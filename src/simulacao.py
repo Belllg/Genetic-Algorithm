@@ -1,31 +1,24 @@
 import csv
 from datetime import datetime, timedelta
 from src.distancia import calcularDistancia
-from src.drone import Drone
 
 class SimulacaoVoo:
-    def __init__(self, ceps, ventos, tempo_max_dia=13*3600, dias=5):
+    def __init__(self, ceps, ventos, melhor_rota, tempo_max_dia=13*3600, dias=5):
         """
         Inicializa a simulação de voo.
-
-        :param drone: Instância da classe Drone.
         :param ceps: Lista de tuplas contendo CEP, latitude e longitude.
         :param ventos: Dicionário com velocidades e direções do vento por dia e horário.
         :param ponto_inicial: CEP do ponto inicial e final do voo.
         :param tempo_max_dia: Tempo máximo de voo diário em segundos (13 horas).
         :param dias: Quantidade máxima de dias para completar a simulação.
         """
-        self.drone = Drone()
         self.ceps = ceps
         self.ventos = ventos  # Estrutura: {1: {"06:00:00": {"velocidade": 10, "direcao": 90}, ...}, ...}
         self.tempo_max_dia = tempo_max_dia
         self.dias = dias
         self.solucao = []
+        self.melhor_rota = melhor_rota  # A melhor rota é passada aqui
         self.ponto_inicial = self.ceps[0]
-
-    def obter_vento(self, dia, horario):
-        """Obtém as condições de vento para o dia e horário dados."""
-        return self.ventos.get(dia, {}).get(horario, {"velocidade": 0, "direcao": 0})
 
     def executar_simulacao(self):
         """Executa a simulação de voo."""
@@ -50,6 +43,7 @@ class SimulacaoVoo:
             # Calcular distância
             distancia = calcularDistancia(ponto_atual, proxima_coordenada)
 
+#TODO CONSERTAR ESSA COISA
             # Realizar voo
             tempo_voo, velocidade, pouso, parar = self.drone.realizar_voo(
                 distancia, 30, vento_velocidade, vento_direcao, 0, tempo_restante_dia
@@ -94,17 +88,4 @@ class SimulacaoVoo:
             if dia > self.dias:
                 print("Limite de dias atingido.")
                 break
-
-    def salvar_csv(self, nome_arquivo="solucao_voo.csv"):
-        """Salva a solução da simulação em um arquivo CSV."""
-        with open(nome_arquivo, mode="w", newline="") as file:
-            writer = csv.DictWriter(file, fieldnames=[
-                "CEP inicial", "Latitude inicial", "Longitude inicial", "Dia do voo", "Hora inicial",
-                "Velocidade", "CEP final", "Latitude final", "Longitude final", "Pouso", "Hora final"
-            ])
-            writer.writeheader()
-            writer.writerows(self.solucao)
-
-        print(f"Solução salva em {nome_arquivo}.")
-
 

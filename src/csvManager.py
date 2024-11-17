@@ -17,3 +17,14 @@ class CoordenadasCSV:
                     })
         return coordenadas
 
+    def salvar_csv(self, solucao, nome_arquivo="solucao_voo.csv"):
+        """Salva a solução da simulação em um arquivo CSV."""
+        with open(nome_arquivo, mode="w", newline="") as file:
+            writer = csv.DictWriter(file, fieldnames=[
+                "CEP inicial", "Latitude inicial", "Longitude inicial", "Dia do voo", "Hora inicial",
+                "Velocidade", "CEP final", "Latitude final", "Longitude final", "Pouso", "Hora final"
+            ])
+            writer.writeheader()
+            writer.writerows(solucao)
+
+        print(f"Solução salva em {nome_arquivo}.")

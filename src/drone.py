@@ -33,6 +33,7 @@ class Drone:
     def ajustar_velocidade_com_vento(self, velocidade, vento_velocidade, vento_direcao, angulo_voo):
         """Ajusta a velocidade do drone de acordo com a direção e velocidade do vento"""
         # Aplique o efeito do vento na velocidade
+        print(f"Tipo de self.vento_direcao: {type(vento_direcao)}")
         angulo_vento = math.radians(vento_direcao)
         angulo_voo_rad = math.radians(angulo_voo)
 
@@ -43,7 +44,7 @@ class Drone:
 
         return velocidade_ajustada
 
-    def calcular_consumo_bateria(tempo_voo, velocidade):
+    def calcular_consumo_bateria(self, tempo_voo, velocidade):
         """Calcula o tempo de operação considerando a velocidade e ajustando proporcionalmente ao cubo da velocidade."""
         # Velocidade de referência (30 km/h)
         velocidade_normal = 30  # km/h
@@ -85,7 +86,7 @@ class Drone:
             self.parar = True
         else:
             # Verificar se há autonomia suficiente
-            if not self.verificar_autonomia(tempo_voo, consumo_bateria):
+            if not self.verificar_autonomia(tempo_voo, tempoRestante, consumo_bateria):
                 return self.pouso, self.parar
         
         return tempo_voo, velocidade, self.pouso, self.parar
