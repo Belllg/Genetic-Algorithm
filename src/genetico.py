@@ -56,10 +56,15 @@ class AlgoritmoGenetico:
         while i < len(rota) - 1:
             cep1 = rota[i]
             cep2 = rota[i + 1]
+            # Calcula o ângulo de voo e a distância entre os pontos
             voo_angulo = calcular_angulo(self.ceps[cep1], self.ceps[cep2])
             distancia = calcular_distancia(self.ceps[cep1], self.ceps[cep2])
+
+            # Obtemos o vento para o dia e horário atual
             vento = self.vento.obter_vento(dia.obter_dia(), dia.obter_horario())
             vento_velocidade, vento_direcao = vento["velocidade"], vento["direcao"]
+
+            #Realizamos o Voo
             tempo_voo, velocidade, pouso, parar = self.drone.realizar_voo(
                 distancia,
                 voo_velocidade[i],
@@ -88,6 +93,58 @@ class AlgoritmoGenetico:
 
         return velocidades, horarios, dias, pousos, tempos
 
+    def simular_tuple(self, rota, dia, voo_velocidade):
+        """Verificar rota e velocidade com o drone"""
+        velocidades, horarios, dias, pousos, tempos = [], [], [], [], []
+        i = 0
+        rota_set = list(rota)  # Converte a rota para lista, caso não seja uma lista já
+
+        while i < len(rota) - 1:
+            cep1 = rota_set[i]  # Aqui você pega a tupla (cep, velocidade)
+            cep2 = rota_set[i + 1]  # Aqui você pega a próxima tupla (cep, velocidade)
+
+            # Acesse o CEP e a Velocidade, que são os dois primeiros valores da tupla
+            cep1_value = cep1[0]  # O primeiro valor da tupla, que é o CEP
+            cep2_value = cep2[0]  # O primeiro valor da próxima tupla, que é o CEP
+
+            # Agora você tem o valor do CEP e a velocidade corretamente
+            # Calcula o ângulo de voo e a distância entre os pontos
+            voo_angulo = calcular_angulo(self.ceps[cep1_value], self.ceps[cep2_value])
+            distancia = calcular_distancia(self.ceps[cep1_value], self.ceps[cep2_value])
+
+            # Obtém o vento para o dia e horário atual
+            vento = self.vento.obter_vento(dia.obter_dia(), dia.obter_horario())
+            vento_velocidade, vento_direcao = vento["velocidade"], vento["direcao"]
+
+            # Realiza o voo
+            tempo_voo, velocidade, pouso, parar = self.drone.realizar_voo(
+                distancia,
+                voo_velocidade[i],  # Aqui você usa a velocidade do voo fornecida
+                vento_velocidade,
+                vento_direcao,
+                voo_angulo,
+                dia.obter_tempo_restante()
+            )
+            dia.passar_tempo(tempo_voo)
+
+            pousos.append(pouso)
+            velocidades.append(velocidade)
+            horarios.append(dia.obter_horario_formatado())
+            dias.append(dia.obter_dia())
+
+            # Se o voo foi bem-sucedido, atualiza o tempo total
+            tempo_total = dia.obter_tempo_total() if tempo_voo != 0 else 99999999
+            tempos.append(tempo_total)
+
+            # Se o drone deve parar, avançamos o dia e repetimos a iteração
+            if parar:
+                dia.avancar_dia()
+                i -= 1  # Reduz o índice para repetir a iteração anterior
+                i = max(i, 0)  # Garante que o índice não chegue a valores negativos
+            i += 1  # Avança para o próximo índice
+
+        return velocidades, horarios, dias, pousos, tempos
+
     def crossover(self, pai1, pai2):
         """Função de crossover para gerar um filho considerando rotas"""
         inicio = random.randint(0, len(pai1) - 2)
@@ -104,29 +161,25 @@ class AlgoritmoGenetico:
         return tuple(filho)  # Retorna como tupla, se necessário
 
     def mutacao(self, rota):
-        """Função de mutação para alterar uma rota, incluindo as velocidades e os ângulos"""
+        """Função de mutação para alterar a ordem da rota e as velocidades"""
         rota = list(rota)  # Converte a rota para lista para permitir alterações
+        velocidades = [p[1] for p in rota]  # Extrai as velocidades
 
-        # Primeira iteração corrigida para usar apenas o índice 'i'
-        for i, _ in enumerate(rota):
+        # Aplica a troca de elementos na rota com probabilidade de mutação
+        for i, _ in enumerate(rota):  # Descompacta o índice e ignora o valor
             if random.random() < self.taxa_mutacao:
-                # Escolhe um índice aleatório para troca
                 j = random.randint(0, len(rota) - 1)
-                rota[i], rota[j] = rota[j], rota[i]  # Troca os elementos
+                # Troca os elementos na lista
+                rota[i], rota[j] = rota[j], rota[i]
 
-        # Recalcular as velocidades e ângulos para todos os pontos da rota
-        for i, _ in enumerate(rota):
-            if i < len(rota) - 1:
-                proximo_idx = rota[i + 1][0]
-            else:  # Último ponto, conecta ao primeiro
-                proximo_idx = rota[0][0]
+                # Troca também as velocidades de i e j
+                velocidades[i], velocidades[j] = velocidades[j], velocidades[i]
 
-            # Atualiza cada elemento da rota com nova velocidade e ângulo
-            rota[i] = (
-                rota[i][0],
-                random.randint(30, 60),  # Nova velocidade aleatória
-                calcular_angulo(self.ceps[rota[i][0]], self.ceps[proximo_idx])
-            )
+        # Modificar aleatoriamente as velocidades
+        for i, _ in enumerate(rota):  # Descompacta o índice e ignora o valor
+            if random.random() < self.taxa_mutacao:
+                # Garante que a nova velocidade e rota sejam alteradas
+                rota[i] = (rota[i][0], random.randint(30, 60))  # Modifica apenas a velocidade
 
         return tuple(rota)  # Retorna como tupla, se necessário
 
@@ -173,10 +226,26 @@ class AlgoritmoGenetico:
             pai1, pai2 = nova_populacao[0], nova_populacao[1]  # Pais já estão na nova_populacao
 
             # Gera o restante da nova população com crossover e mutação
-            while len(nova_populacao) < self.tamanho_populacao :
-                filho = self.crossover(pai1, pai2)
-                self.mutacao(filho)
-                nova_populacao.append(filho)
+            while len(nova_populacao) < self.tamanho_populacao:
+                filho = self.crossover(pai1, pai2)  # Aplica crossover
+                filho_m = self.mutacao(filho)  # Aplica mutação
+
+                # Recalcula as variáveis dependentes (velocidade, ângulo, tempo, pousos, etc.)
+                dia = ContadorDeTempo(13, 5)  # Inicializa o contador de tempo
+                self.drone.resetar_drone()  # Recarga o drone
+                velocidades, horarios, dias, pousos, tempos = self.simular_tuple(
+                                                                            filho_m,
+                                                                            dia,
+                                                                            [x[1] for x in filho_m])
+
+                # Cria um novo indivíduo com as informações recalculadas
+                novo_individuo = tuple(zip(filho_m,
+                                           velocidades,
+                                           horarios,
+                                           dias,
+                                           pousos,
+                                           tempos))
+                nova_populacao.append(novo_individuo)
 
             self.populacao = nova_populacao
 
