@@ -49,8 +49,6 @@ class ContadorDeTempo:
 
     def avancar_dia(self):
         """Avança para o próximo dia."""
-        if self.dia_atual < self.dias:
+        if self.dia_atual <= self.dias:
             self.dia_atual += 1
             self.hora_atual = 0  # Reseta para o início do dia
-        else:
-            print("Limite de dias atingido.")

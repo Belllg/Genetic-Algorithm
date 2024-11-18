@@ -117,6 +117,10 @@ class Vento:
     }
 
     def obter_vento(self, dia, horario):
+        if not isinstance(horario, int) or horario < 0:
+            raise ValueError("O parâmetro 'horario' deve ser um número inteiro não negativo.")
+        if(dia > 6):
+            return 999999, 90
         hora = horario // 3600  # Horas
         """Obtém as condições de vento para o dia e horário dados."""
         return self.ventos.get(dia,{}).get(hora,{"velocidade": 0,"direcao": 0})

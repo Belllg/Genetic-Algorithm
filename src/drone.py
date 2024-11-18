@@ -7,12 +7,20 @@ class Drone:
         self.pouso = False 
         self.parar = False
 
-    def calcular_tempo_voo(self, distancia, velocidade, vento_velocidade, vento_direcao, angulo_voo):
+    def calcular_tempo_voo(self, distancia, velocidade, vento_velocidade, vento_direcao, angulo_voo, tempoRestante):
         """Calcula o tempo de voo entre duas coordenadas em segundos"""
-        while True:
+
+        max_iteracoes = 31
+        iteracoes = 0
+        while  iteracoes < max_iteracoes:
+            iteracoes += 1
+            if velocidade < 30:
+                return 0, 0, 0
             # Ajustar a velocidade considerando o vento
             velocidade_ajustada = self.ajustar_velocidade_com_vento(velocidade, vento_velocidade, vento_direcao, angulo_voo)
             # Convertendo a velocidade ajustada de km/h para km/s
+            if velocidade_ajustada <= 0:
+                return 0, 0, 0
             velocidade_kmps = velocidade_ajustada / 3600  # Km/s
             # Calcula o tempo de voo
             tempo_voo = distancia / velocidade_kmps  # em segundos
@@ -20,20 +28,27 @@ class Drone:
             consumo_bateria = self.calcular_consumo_bateria(tempo_voo, velocidade)
             # Calcula o alcance do robô com a bateria disponível
             alcance = consumo_bateria * velocidade_kmps
-            
-            # Verifica se o alcance é suficiente para a distância desejada
+
             if alcance >= distancia:
                 break  # Condição satisfeita, saímos do loop
-            else:
-                velocidade -= 1  # Reduz a velocidade se o alcance for insuficiente
+            elif self.bateria < self.autonomia:
+                self.verificar_autonomia(tempo_voo,tempoRestante, consumo_bateria)
 
+            # Verifica se o alcance é suficiente para a distância desejada
+            if alcance >= distancia and alcance <= 15:
+                break  # Condição satisfeita, saímos do loop
+            else:
+                velocidade -= 1
+        if iteracoes >= max_iteracoes:
+            print ("Alcance, Distancia, Bateria",alcance, distancia, self.bateria)
+            print("Fracasso")
+            return 0, 0, 0
         # Retorna os valores calculados
         return math.ceil(tempo_voo), velocidade, consumo_bateria
 
     def ajustar_velocidade_com_vento(self, velocidade, vento_velocidade, vento_direcao, angulo_voo):
         """Ajusta a velocidade do drone de acordo com a direção e velocidade do vento"""
         # Aplique o efeito do vento na velocidade
-        print(f"Tipo de self.vento_direcao: {type(vento_direcao)}")
         angulo_vento = math.radians(vento_direcao)
         angulo_voo_rad = math.radians(angulo_voo)
 
@@ -66,27 +81,24 @@ class Drone:
         # Se o consumo total for maior que a autonomia do drone, o drone precisa pousar para recarga
         if consumo_bateria > self.bateria:
             self.pouso = True
-            self.bateria = self.autonomia  # Recarga total
-            if((tempo_voo + 60 + 60) > tempoRestante):#Se apos recarga tem tempo sobrando par voar e tirar foto
-                self.parar = True
-                return False       
-        self.bateria -= consumo_bateria  # Subtrai o consumo da bateria
-        return True  # Tem autonomia suficiente
+            self.recarga()  # Recarga total
+            if((tempo_voo + 120) > tempoRestante):#Se apos recarga tem tempo sobrando par voar e tirar foto
+                self.parar = True   
     
+    def recarga(self):
+        self.bateria = self.autonomia
+
     def realizar_voo(self, distancia, velocidade, vento_velocidade, vento_direcao, angulo_voo, tempoRestante):
+        if distancia > 15:
+            return 0, 0, False, False
         """Simula o voo do drone, calcula a distância, tempo e consumo de bateria"""   
         self.pouso = False 
         self.parar = False    
-    
         # Calcular o tempo de voo
-        tempo_voo, velocidade, consumo_bateria = self.calcular_tempo_voo(distancia, velocidade, vento_velocidade, vento_direcao, angulo_voo)
-        
+        tempo_voo, velocidade, consumo_bateria = self.calcular_tempo_voo(distancia, velocidade, vento_velocidade, vento_direcao, angulo_voo, tempoRestante)
+        self.bateria -= consumo_bateria  # Subtrai o consumo da bateria
         #Verificar se sobra tempo para voar e chagar la para retirar foto
         if (tempo_voo + 60) > tempoRestante:
             self.parar = True
-        else:
-            # Verificar se há autonomia suficiente
-            if not self.verificar_autonomia(tempo_voo, tempoRestante, consumo_bateria):
-                return self.pouso, self.parar
         
         return tempo_voo, velocidade, self.pouso, self.parar

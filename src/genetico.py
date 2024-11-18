@@ -22,91 +22,130 @@ class AlgoritmoGenetico:
         self.taxa_mutacao = taxa_mutacao
         self.vento = Vento()
         self.drone = Drone()
-        self.populacao = self.criar_populacao_inicial()
-        
+        self.populacao = self.criar_populacao_inicial()       
 
     def criar_populacao_inicial(self):
         """Cria a população inicial composta por rotas embaralhadas, garantindo unicidade e incluindo parâmetros de voo"""
         tempo_maximo = 3600 * 13 * 5
-        populacao_inicial = []
+        velocidades, horarios, dias, pousos, tempos = [], [], [], [], []
+        populacao_inicial = set()
         while len(populacao_inicial) < self.tamanho_populacao:
             rota = random.sample(range(len(self.ceps)), len(self.ceps))
+            voo_velocidade = [random.randint(30, 60) for _ in range(len(self.ceps))]
             dia = ContadorDeTempo(13, 5)
-            velocidades = []  # Velocidades aleatórias entre 30 e 60 km/h
-            horarios = []
-            dias = []
-            pousos = []
-            valides = []
-            tempos = []
-            for i in range(len(rota) - 1):
-                valido = True
-                cep1 = rota[i]
-                cep2 = rota[i + 1]
-                voo_angulo = calcular_angulo(self.ceps[cep1], self.ceps[cep2])
-                voo_velocidade = random.randint(30, 60) 
-                distancia = calcularDistancia(self.ceps[cep1], self.ceps[cep2])
-                vento = self.vento.obter_vento(dia.obter_dia(), dia.obter_horario())
-                vento_velocidade, vento_direcao = vento["velocidade"], vento["direcao"]
-                tempo_voo, velocidade, pouso, parar = self.drone.realizar_voo( distancia, voo_velocidade, vento_velocidade, vento_direcao, voo_angulo, dia.obter_tempo_restante())
-                pousos.append(pouso)
-                dia.passar_tempo(tempo_voo)
-                velocidades.append(velocidade)
-                horarios.append(dia.obter_horario_formatado)
-                dias.append(dia.obter_dia)
-                tempo_total = dia.obter_tempo_Total()
-                tempos.append(tempo_total)
-                if parar:
-                    dia.avancar_dia()
-                if distancia > 15 or tempo_total > tempo_maximo:
-                    valido = False
-                    valides.append(valido)
-                    break
-                valides.append(valido)
-            individuo = list(zip(rota, velocidades, horarios, dias, pousos, valides, tempos))
+            self.drone.recarga()
+            velocidades, horarios, dias, pousos, tempos = self.simular(rota, dia, tempo_maximo, voo_velocidade)
+            print("Rota Criada")    
+            individuo = tuple(zip(rota, velocidades, horarios, dias, pousos, tempos))
             if individuo not in populacao_inicial:
-                populacao_inicial.append(individuo)
+                populacao_inicial.add(individuo)
     
-        return populacao_inicial
+        return list(populacao_inicial)
+
+    def simular(self, rota, dia, tempo_maximo, voo_velocidade):
+        velocidades, horarios, dias, pousos, tempos = [], [], [], [], []
+        i = 0
+        while i < len(rota) - 1:
+            cep1 = rota[i]
+            cep2 = rota[i + 1]
+            voo_angulo = calcular_angulo(self.ceps[cep1], self.ceps[cep2])
+            distancia = calcularDistancia(self.ceps[cep1], self.ceps[cep2])
+            vento = self.vento.obter_vento(dia.obter_dia(), dia.obter_horario())
+            vento_velocidade, vento_direcao = vento["velocidade"], vento["direcao"]
+            tempo_voo, velocidade, pouso, parar = self.drone.realizar_voo(
+                distancia, voo_velocidade[i], vento_velocidade, vento_direcao, voo_angulo, dia.obter_tempo_restante()
+            )
+            pousos.append(pouso)
+            dia.passar_tempo(tempo_voo)
+            velocidades.append(velocidade)
+            horarios.append(dia.obter_horario_formatado)
+            dias.append(dia.obter_dia)
+            tempo_total = dia.obter_tempo_Total()
+            tempos.append(tempo_total)
+            
+            if parar:
+                dia.avancar_dia()
+                i -= 1  # Reduz o índice para repetir a iteração anterior
+                if i < 0:  # Garante que não ultrapasse o limite inferior
+                    i = 0
+            
+            if distancia > 15 or tempo_total > tempo_maximo:
+                distancia = 999999999
+            
+            i += 1  # Avança para o próximo índice
+            
+        return velocidades, horarios, dias, pousos, tempos
 
     def crossover(self, pai1, pai2):
-        """Função de crossover para gerar um filho considerando rotas, velocidades e ângulos"""
+        """Função de crossover para gerar um filho considerando rotas"""
         inicio = random.randint(0, len(pai1) - 2)
         fim = random.randint(inicio, len(pai1) - 1)
-        filho = pai1[inicio:fim]
+
+        # Inicializa o filho como lista com os segmentos do pai1
+        filho = list(pai1[inicio:fim])
 
         # Adiciona segmentos de pai2 que não estão no filho
         for segmento in pai2:
             if segmento not in filho:
                 filho.append(segmento)
-        return filho
 
-    def mutacao(self, rota): 
+        return tuple(filho)  # Retorna como tupla, se necessário
+
+    def mutacao(self, rota):
         """Função de mutação para alterar uma rota ligeiramente, incluindo as velocidades e os ângulos"""
+        rota = list(rota)  # Converte a rota para lista para permitir alterações
+
         for i in range(len(rota)):
             if random.random() < self.taxa_mutacao:
                 # Escolhe um índice aleatório para troca
                 j = random.randint(0, len(rota) - 1)
-                rota[i], rota[j] = rota[j], rota[i]
-        
-        # Recalcular as velocidades e os ângulos para todos os pontos da rota
+                rota[i], rota[j] = rota[j], rota[i]  # Troca os elementos
+
+        # Recalcular as velocidades e ângulos para todos os pontos da rota
         for i in range(len(rota)):
             if i < len(rota) - 1:
                 proximo_idx = rota[i + 1][0]
             else:  # Último ponto, conecta ao primeiro
                 proximo_idx = rota[0][0]
-            
+
             # Atualiza cada elemento da rota com nova velocidade e ângulo
             rota[i] = (
                 rota[i][0],
                 random.randint(30, 60),  # Nova velocidade aleatória
-                self.calcular_angulo_entre_pontos(self.ceps[rota[i][0]], self.ceps[proximo_idx])
+                calcular_angulo(self.ceps[rota[i][0]], self.ceps[proximo_idx])
             )
 
+        return tuple(rota)  # Retorna como tupla, se necessário
+
     def fitness(self):
-        """Calcula a aptidão de cada rota e retorna uma população ordenada pela aptidão"""
-        return sorted(self.populacao, key=lambda rota: calcular_distancia_total(self.ceps, rota))
+        """
+        Calcula a aptidão de cada rota com base na distância total percorrida.
+        Quanto menor a distância, maior a aptidão.
+        Retorna a população ordenada pela aptidão.
+        """
+        def calcular_aptidao(individuo):
+            distancia_total = 0
+            tempo_total = 0
+            numero_pousos = 0
+            
+            for segmento in individuo:
+                _, _, _, _, pouso, tempo_segmento = segmento
+                distancia_total += calcularDistancia(
+                    self.ceps[segmento[0]], 
+                    self.ceps[individuo[(individuo.index(segmento) + 1) % len(individuo)][0]]
+                )
+                tempo_total += tempo_segmento
+                if pouso:
+                    numero_pousos += 1
+            
+            # Fórmula de aptidão: menor distância e menos pousos são melhores
+            return distancia_total + (numero_pousos * 1000) + (tempo_total / 3600)
+
+        # Ordena a população com base na aptidão (menor valor é melhor)
+        return sorted(self.populacao, key=calcular_aptidao)
 
     def evoluir_populacao(self):
+        print("Populacao Inicial Criada")
         """Evolui a população através de elitismo, crossover e mutação, com 20% da população gerada aleatoriamente."""
         melhor_rota_encontrada = None
         menor_distancia = float('inf')
