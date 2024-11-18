@@ -9,6 +9,13 @@ class Drone:
         self.pouso = False
         self.parar = False
 
+    def resetar_drone(self):
+        """Reseta o drone"""
+        self.autonomia = 1800  # em segundos (30 minutos = 1800 segundos)
+        self.bateria = self.autonomia  # em segundos, começando cheia
+        self.pouso = False
+        self.parar = False
+
     def calcular_tempo_voo(self,
                            distancia,
                            velocidade,
@@ -41,16 +48,16 @@ class Drone:
             # Calcula o alcance do robô com a bateria disponível
             alcance = consumo_bateria * velocidade_kmps
 
-            if alcance >= distancia:
+            if (tempo_voo + 120) > tempo_restante:
+                self.parar = True
+
+            if alcance >= distancia and self.verificar_autonomia(consumo_bateria):
                 break  # Condição satisfeita, saímos do loop
-            elif self.bateria < self.autonomia:
-                self.verificar_autonomia(tempo_voo,tempo_restante, consumo_bateria)
 
             # Verifica se o alcance é suficiente para a distância desejada
             if alcance >= distancia and alcance <= 15:
                 break  # Condição satisfeita, saímos do loop
-            else:
-                velocidade -= 1
+            velocidade -= 1
         if iteracoes >= max_iteracoes:
             print ("Alcance, Distancia, Bateria",alcance, distancia, self.bateria)
             print("Fracasso")
@@ -88,18 +95,14 @@ class Drone:
 
         return consumo
 
-    def verificar_autonomia(self, tempo_voo, tempo_restante, consumo_bateria):
+    def verificar_autonomia(self, consumo_bateria):
         """Verifica se a autonomia do drone é suficiente para o voo"""
         # Se o consumo total for maior que a autonomia do drone, o drone precisa pousar para recarga
         if consumo_bateria > self.bateria:
             self.pouso = True
-            self.recarga()  # Recarga total
-            #Se apos recarga tem tempo sobrando par voar e tirar foto
-            if (tempo_voo + 120) > tempo_restante:
-                self.parar = True
-    def recarga(self):
-        """Recarrega o Drone"""
-        self.bateria = self.autonomia
+            self.bateria = self.autonomia
+            return False
+        return True
 
     def realizar_voo(self,
                      distancia,

@@ -26,18 +26,27 @@ class AlgoritmoGenetico:
 
     def criar_populacao_inicial(self):
         """Cria a população inicial """
-        velocidades, horarios, dias, pousos, tempos = [], [], [], [], []
         populacao_inicial = set()
         while len(populacao_inicial) < self.tamanho_populacao:
+             # Gera uma rota aleatória
             rota = random.sample(range(len(self.ceps)), len(self.ceps))
             voo_velocidade = [random.randint(30, 60) for _ in range(len(self.ceps))]
             dia = ContadorDeTempo(13, 5)
-            self.drone.recarga()
+
+            # Simula o voo com a rota e coleta os dados
+            self.drone.resetar_drone()
             velocidades, horarios, dias, pousos, tempos = self.simular(rota, dia, voo_velocidade)
-            print("Rota Criada")
+
+            # Cria o indivíduo (tupla) com as informações da rota, velocidades, horários, etc.
             individuo = tuple(zip(rota, velocidades, horarios, dias, pousos, tempos))
+
+            # Se o indivíduo não foi gerado ainda, adiciona à população
             if individuo not in populacao_inicial:
                 populacao_inicial.add(individuo)
+
+            print("Rota Criada")
+
+        # Retorna a população inicial como uma lista
         return list(populacao_inicial)
 
     def simular(self, rota, dia, voo_velocidade):
@@ -59,22 +68,24 @@ class AlgoritmoGenetico:
                 voo_angulo,
                 dia.obter_tempo_restante()
             )
-            pousos.append(pouso)
             dia.passar_tempo(tempo_voo)
+
+            pousos.append(pouso)
             velocidades.append(velocidade)
             horarios.append(dia.obter_horario_formatado())
             dias.append(dia.obter_dia())
-            if tempo_voo == 0:
-                tempo_total = 99999999
-            else:
-                tempo_total = dia.obter_tempo_total()
+
+            # Se o voo foi bem-sucedido, atualiza o tempo total
+            tempo_total = dia.obter_tempo_total() if tempo_voo != 0 else 99999999
             tempos.append(tempo_total)
+
+            # Se o drone deve parar, avançamos o dia e repetimos a iteração
             if parar:
                 dia.avancar_dia()
                 i -= 1  # Reduz o índice para repetir a iteração anterior
-                if i < 0:  # Garante que não ultrapasse o limite inferior
-                    i = 0
+                i = max(i, 0)#garante que ele n chegue a zero
             i += 1  # Avança para o próximo índice
+
         return velocidades, horarios, dias, pousos, tempos
 
     def crossover(self, pai1, pai2):
@@ -138,7 +149,7 @@ class AlgoritmoGenetico:
                 tempo_total += tempo_segmento
                 if pouso:
                     numero_pousos += 1# Fórmula de aptidão: menor distância e pousos são melhores
-            return distancia_total + (numero_pousos * 1000) + (tempo_total / 3600)
+            return distancia_total + (numero_pousos * 1000) + tempo_total
 
         # Ordena a população com base na aptidão (menor valor é melhor)
         return sorted(self.populacao, key=calcular_aptidao)
