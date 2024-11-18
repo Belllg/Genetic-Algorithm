@@ -55,6 +55,8 @@ class AlgoritmoGenetico:
             tempo_voo, velocidade, pouso, parar = self.drone.realizar_voo(
                 distancia, voo_velocidade[i], vento_velocidade, vento_direcao, voo_angulo, dia.obter_tempo_restante()
             )
+            if tempo_voo == 0:
+                tempo_voo = 99999999
             pousos.append(pouso)
             dia.passar_tempo(tempo_voo)
             velocidades.append(velocidade)
@@ -68,10 +70,6 @@ class AlgoritmoGenetico:
                 i -= 1  # Reduz o índice para repetir a iteração anterior
                 if i < 0:  # Garante que não ultrapasse o limite inferior
                     i = 0
-            
-            if distancia > 15 or tempo_total > tempo_maximo:
-                distancia = 999999999
-            
             i += 1  # Avança para o próximo índice
             
         return velocidades, horarios, dias, pousos, tempos
