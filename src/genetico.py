@@ -1,6 +1,7 @@
 """Modulo com funções de Evolucao"""
 import random
-from src.distancia import calcular_distancia, calcular_distancia_total, calcular_angulo
+from src.distancia import calcular_distancia, calcular_distancia_total
+from src.simulador import simular, simular_tuple
 from src.dia import ContadorDeTempo
 from src.vento import Vento
 from src.drone import Drone
@@ -35,7 +36,7 @@ class AlgoritmoGenetico:
 
             # Simula o voo com a rota e coleta os dados
             self.drone.resetar_drone()
-            velocidades, horarios, dias, pousos, tempos = self.simular(rota, dia, voo_velocidade)
+            velocidades, horarios, dias, pousos, tempos = simular(self, rota, dia, voo_velocidade)
 
             # Cria o indivíduo (tupla) com as informações da rota, velocidades, horários, etc.
             individuo = tuple(zip(rota, velocidades, horarios, dias, pousos, tempos))
@@ -49,102 +50,6 @@ class AlgoritmoGenetico:
         # Retorna a população inicial como uma lista
         return list(populacao_inicial)
 
-    def simular(self, rota, dia, voo_velocidade):
-        """Verificar rota e velocidade com o drone"""
-        velocidades, horarios, dias, pousos, tempos = [], [], [], [], []
-        i = 0
-        while i < len(rota) - 1:
-            cep1 = rota[i]
-            cep2 = rota[i + 1]
-            # Calcula o ângulo de voo e a distância entre os pontos
-            voo_angulo = calcular_angulo(self.ceps[cep1], self.ceps[cep2])
-            distancia = calcular_distancia(self.ceps[cep1], self.ceps[cep2])
-
-            # Obtemos o vento para o dia e horário atual
-            vento = self.vento.obter_vento(dia.obter_dia(), dia.obter_horario())
-            vento_velocidade, vento_direcao = vento["velocidade"], vento["direcao"]
-
-            #Realizamos o Voo
-            tempo_voo, velocidade, pouso, parar = self.drone.realizar_voo(
-                distancia,
-                voo_velocidade[i],
-                vento_velocidade,
-                vento_direcao,
-                voo_angulo,
-                dia.obter_tempo_restante()
-            )
-            dia.passar_tempo(tempo_voo)
-
-            pousos.append(pouso)
-            velocidades.append(velocidade)
-            horarios.append(dia.obter_horario_formatado())
-            dias.append(dia.obter_dia())
-
-            # Se o voo foi bem-sucedido, atualiza o tempo total
-            tempo_total = dia.obter_tempo_total() if tempo_voo != 0 else 99999999
-            tempos.append(tempo_total)
-
-            # Se o drone deve parar, avançamos o dia e repetimos a iteração
-            if parar:
-                dia.avancar_dia()
-                i -= 1  # Reduz o índice para repetir a iteração anterior
-                i = max(i, 0)#garante que ele n chegue a zero
-            i += 1  # Avança para o próximo índice
-
-        return velocidades, horarios, dias, pousos, tempos
-
-    def simular_tuple(self, rota, dia, voo_velocidade):
-        """Verificar rota e velocidade com o drone"""
-        velocidades, horarios, dias, pousos, tempos = [], [], [], [], []
-        i = 0
-        rota_set = list(rota)  # Converte a rota para lista, caso não seja uma lista já
-
-        while i < len(rota) - 1:
-            cep1 = rota_set[i]  # Aqui você pega a tupla (cep, velocidade)
-            cep2 = rota_set[i + 1]  # Aqui você pega a próxima tupla (cep, velocidade)
-
-            # Acesse o CEP e a Velocidade, que são os dois primeiros valores da tupla
-            cep1_value = cep1[0]  # O primeiro valor da tupla, que é o CEP
-            cep2_value = cep2[0]  # O primeiro valor da próxima tupla, que é o CEP
-
-            # Agora você tem o valor do CEP e a velocidade corretamente
-            # Calcula o ângulo de voo e a distância entre os pontos
-            voo_angulo = calcular_angulo(self.ceps[cep1_value], self.ceps[cep2_value])
-            distancia = calcular_distancia(self.ceps[cep1_value], self.ceps[cep2_value])
-
-            # Obtém o vento para o dia e horário atual
-            vento = self.vento.obter_vento(dia.obter_dia(), dia.obter_horario())
-            vento_velocidade, vento_direcao = vento["velocidade"], vento["direcao"]
-
-            # Realiza o voo
-            tempo_voo, velocidade, pouso, parar = self.drone.realizar_voo(
-                distancia,
-                voo_velocidade[i],  # Aqui você usa a velocidade do voo fornecida
-                vento_velocidade,
-                vento_direcao,
-                voo_angulo,
-                dia.obter_tempo_restante()
-            )
-            dia.passar_tempo(tempo_voo)
-
-            pousos.append(pouso)
-            velocidades.append(velocidade)
-            horarios.append(dia.obter_horario_formatado())
-            dias.append(dia.obter_dia())
-
-            # Se o voo foi bem-sucedido, atualiza o tempo total
-            tempo_total = dia.obter_tempo_total() if tempo_voo != 0 else 99999999
-            tempos.append(tempo_total)
-
-            # Se o drone deve parar, avançamos o dia e repetimos a iteração
-            if parar:
-                dia.avancar_dia()
-                i -= 1  # Reduz o índice para repetir a iteração anterior
-                i = max(i, 0)  # Garante que o índice não chegue a valores negativos
-            i += 1  # Avança para o próximo índice
-
-        return velocidades, horarios, dias, pousos, tempos
-
     def crossover(self, pai1, pai2):
         """Função de crossover para gerar um filho considerando rotas e velocidades"""
         # Define pontos de início e fim para o crossover
@@ -153,7 +58,7 @@ class AlgoritmoGenetico:
 
         # Inicializa o filho com parte da rota e velocidades do pai1
         filho_rota = list(pai1[inicio:fim])
-        filho_velocidades = list([p[1] for p in pai1[inicio:fim]])  # Velocidades correspondentes aos pontos da rota
+        filho_velocidades = list([p[1] for p in pai1[inicio:fim]])
 
         # Adiciona os pontos e velocidades de pai2 que não estão no filho
         for i, ponto in enumerate(pai2):
@@ -168,31 +73,44 @@ class AlgoritmoGenetico:
                     filho_rota.append(ponto)
                     filho_velocidades.append(pai1[i][1])
 
-        # O filho retornará tanto a nova rota quanto as novas velocidades
-        return tuple(zip(filho_rota, filho_velocidades))
+        # Agora, criamos a nova população de maneira correta
+        filho = []
+        for i, ponto in enumerate(filho_rota):
+            # Para cada ponto da rota, cria-se uma tupla (cep, velocidade, horario, pouso, tempo)
+            filho.append((filho_rota[i][0],   # Cep
+                        filho_velocidades[i],  # Velocidade
+                        ponto[2],  # Horário do ponto (substitua conforme necessário)
+                        ponto[3],  # dias (substitua conforme necessário)
+                        ponto[4],  # Pouso (substitua conforme necessário)
+                        ponto[5]))  # Tempo (substitua conforme necessário)
+        return filho
 
     def mutacao(self, rota):
-        """Função de mutação para alterar a ordem da rota e as velocidades"""
+        """Função de mutação para alterar o cep e a velocidade da rota"""
         rota = list(rota)  # Converte a rota para lista para permitir alterações
-        velocidades = [p[1] for p in rota]  # Extrai as velocidades
 
-        # Aplica a troca de elementos na rota com probabilidade de mutação
-        for i, _ in enumerate(rota):  # Descompacta o índice e ignora o valor
+        # Aplica a troca de cep e velocidade com probabilidade de mutação
+        for i, ponto in enumerate(rota):  # Percorre cada elemento da rota
             if random.random() < self.taxa_mutacao:
-                j = random.randint(0, len(rota) - 1)
-                # Troca os elementos na lista
-                rota[i], rota[j] = rota[j], rota[i]
+                j = random.randint(0, len(rota) - 1)  # Escolhe um índice aleatório
+                # Troca o cep e a velocidade de i e j
+                cep_i, velocidade_i, horario_i, dia_i, pouso_i, tempo_i = rota[i]
+                cep_j, velocidade_j, horario_j, dia_j, pouso_j, tempo_j = rota[j]
 
-                # Troca também as velocidades de i e j
-                velocidades[i], velocidades[j] = velocidades[j], velocidades[i]
+                # Realiza a troca dos cêps e das velocidades, mas mantém os outros valores
+                rota[i] = (cep_j, velocidade_i, horario_i, dia_i, pouso_i, tempo_i)
+                rota[j] = (cep_i, velocidade_j, horario_j, dia_j, pouso_j, tempo_j)
 
-        # Modificar aleatoriamente as velocidades
-        for i, _ in enumerate(rota):  # Descompacta o índice e ignora o valor
+        # Modificar aleatoriamente a velocidade de um ponto da rota
+        for i, ponto in enumerate(rota):  # Percorre cada ponto da rota
             if random.random() < self.taxa_mutacao:
-                # Garante que a nova velocidade e rota sejam alteradas
-                rota[i] = (rota[i][0], random.randint(30, 60))  # Modifica apenas a velocidade
+                # Modifica aleatoriamente a velocidade de um ponto específico
+                nova_velocidade = random.randint(30, 60)  # Velocidade aleatória entre 30 e 60
+                cep, _, horario, dias, pouso, tempo = ponto  # Pega os outros valores da tupla sem modificar
+                rota[i] = (cep, nova_velocidade, horario, dias, pouso, tempo)  # Atualiza a tupla apenas com a nova velocidade
 
-        return tuple(rota)  # Retorna como tupla, se necessário
+        # Retorna a rota mutada como tupla
+        return tuple(rota)
 
     def fitness(self):
         """
@@ -223,7 +141,6 @@ class AlgoritmoGenetico:
         print("Populacao Inicial Criada")
         melhor_rota_encontrada = None
         menor_distancia = float('inf')
-
         for _ in range(self.geracoes):
             # Ordena a população pela aptidão (menor distância)
             populacao_ordenada = self.fitness()
@@ -240,29 +157,27 @@ class AlgoritmoGenetico:
             while len(nova_populacao) < self.tamanho_populacao:
                 filho = self.crossover(pai1, pai2)  # Aplica crossover
                 filho_m = self.mutacao(filho)  # Aplica mutação
-
+                print(filho_m)
                 # Recalcula as variáveis dependentes (velocidade, ângulo, tempo, pousos, etc.)
                 dia = ContadorDeTempo(13, 5)  # Inicializa o contador de tempo
                 self.drone.resetar_drone()  # Recarga o drone
-                velocidades, horarios, dias, pousos, tempos = self.simular_tuple(
+                velocidades, horarios, dias, pousos, tempos = simular_tuple(self,
                                                                             filho_m,
                                                                             dia,
                                                                             [x[1] for x in filho_m])
 
                 # Cria um novo indivíduo com as informações recalculadas
-                novo_individuo = tuple(zip(filho_m,
-                                           velocidades,
-                                           horarios,
-                                           dias,
-                                           pousos,
-                                           tempos))
+                novo_individuo = [
+                    (cep, velocidade, horario, dias, pouso, tempo)  # Combinando os dados de filho_m com as variáveis recalculadas
+                    for (cep, _, _, _, _, _), velocidade, horario, dias, pouso, tempo in zip(filho_m, velocidades, horarios, dias, pousos, tempos)
+                ]
                 nova_populacao.append(novo_individuo)
 
             self.populacao = nova_populacao
 
             # Atualiza a melhor solução encontrada
             for rota in self.populacao:
-                distancia_atual = calcular_distancia_total(self.ceps, rota)
+                distancia_atual = calcular_distancia_total(self.ceps, list(rota))
                 if distancia_atual < menor_distancia:
                     menor_distancia = distancia_atual
                     melhor_rota_encontrada = rota

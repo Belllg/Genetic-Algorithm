@@ -58,7 +58,7 @@ class Drone:
             if alcance >= distancia and alcance <= 15:
                 break  # Condição satisfeita, saímos do loop
             velocidade -= 1
-        if iteracoes >= max_iteracoes:
+        if iteracoes > max_iteracoes:
             print ("Alcance, Distancia, Bateria",alcance, distancia, self.bateria)
             print("Fracasso")
             return 0, 0, 0
