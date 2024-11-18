@@ -31,3 +31,36 @@ def salvar_csv(solucao, nome_arquivo="solucao_voo.csv"):
         writer.writerows(solucao)
 
     print(f"Solução salva em {nome_arquivo}.")
+
+def gerar_solucao(melhor_rota, ceps):
+    """Gera a solução formatada para salvar no CSV a partir da melhor rota e variáveis calculadas"""
+    solucao = []
+
+    # Cria um dicionário de coordenadas CEP → (latitude, longitude)
+    coordenadas_dict = {coord['cep']: (coord['latitude'], coord['longitude']) for coord in ceps}
+
+    for i in range(len(melhor_rota) - 1):
+        cep_inicial, velocidade, horario_inicial, dia, pouso, _ = melhor_rota[i]
+        cep_final, _, horario_final, _, _, _ = melhor_rota[i + 1]
+        
+
+        # Recupera as coordenadas dos CEPs
+        lat_inicial, lon_inicial = coordenadas_dict.get(cep_inicial, (None, None))
+        lat_final, lon_final = coordenadas_dict.get(cep_final, (None, None))
+
+        # Adiciona as informações no formato adequado para o CSV
+        solucao.append({
+            "CEP inicial": cep_inicial,
+            "Latitude inicial": lat_inicial,
+            "Longitude inicial": lon_inicial,
+            "Dia do voo": dia,  # Extraímos o dia da data/hora
+            "Hora inicial": horario_inicial.split(' ')[1],  # Extraímos a hora da data/hora
+            "Velocidade": velocidade,
+            "CEP final": cep_final,
+            "Latitude final": lat_final,
+            "Longitude final": lon_final,
+            "Pouso": pouso,
+            "Hora final": horario_final
+        })
+
+    return solucao
