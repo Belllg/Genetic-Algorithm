@@ -146,19 +146,30 @@ class AlgoritmoGenetico:
         return velocidades, horarios, dias, pousos, tempos
 
     def crossover(self, pai1, pai2):
-        """Função de crossover para gerar um filho considerando rotas"""
+        """Função de crossover para gerar um filho considerando rotas e velocidades"""
+        # Define pontos de início e fim para o crossover
         inicio = random.randint(0, len(pai1) - 2)
-        fim = random.randint(inicio, len(pai1) - 1)
+        fim = random.randint(inicio + 1, len(pai1) - 1)
 
-        # Inicializa o filho como lista com os segmentos do pai1
-        filho = list(pai1[inicio:fim])
+        # Inicializa o filho com parte da rota e velocidades do pai1
+        filho_rota = list(pai1[inicio:fim])
+        filho_velocidades = list([p[1] for p in pai1[inicio:fim]])  # Velocidades correspondentes aos pontos da rota
 
-        # Adiciona segmentos de pai2 que não estão no filho
-        for segmento in pai2:
-            if segmento not in filho:
-                filho.append(segmento)
+        # Adiciona os pontos e velocidades de pai2 que não estão no filho
+        for i, ponto in enumerate(pai2):
+            if ponto not in filho_rota:
+                filho_rota.append(ponto)
+                filho_velocidades.append(pai2[i][1])  # Adiciona a velocidade correspondente de pai2
 
-        return tuple(filho)  # Retorna como tupla, se necessário
+        # Garante que o filho tenha a mesma quantidade de pontos e velocidades que os pais
+        if len(filho_rota) < len(pai1):
+            for i, ponto in enumerate(pai1):
+                if ponto not in filho_rota:
+                    filho_rota.append(ponto)
+                    filho_velocidades.append(pai1[i][1])
+
+        # O filho retornará tanto a nova rota quanto as novas velocidades
+        return tuple(zip(filho_rota, filho_velocidades))
 
     def mutacao(self, rota):
         """Função de mutação para alterar a ordem da rota e as velocidades"""
