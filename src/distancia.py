@@ -28,11 +28,6 @@ def calcular_distancia_total(ceps, rota):
     for i in range(len(rota) - 1):
         cep1 = rota[i][0]
         cep2 = rota[i + 1][0]
-        print(type(cep1))
-        if type(cep1) == tuple:
-            print(cep1)
-            print (rota)
-
         distancia = calcular_distancia( ceps[cep1],  ceps[cep2])
         # Ajustar a distância com base na velocidade e ângulo de voo
         velocidade = rota[i][1]

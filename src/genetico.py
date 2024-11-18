@@ -45,8 +45,6 @@ class AlgoritmoGenetico:
             if individuo not in populacao_inicial:
                 populacao_inicial.add(individuo)
 
-            print("Rota Criada")
-
         # Retorna a população inicial como uma lista
         return list(populacao_inicial)
 
@@ -105,9 +103,11 @@ class AlgoritmoGenetico:
         for i, ponto in enumerate(rota):  # Percorre cada ponto da rota
             if random.random() < self.taxa_mutacao:
                 # Modifica aleatoriamente a velocidade de um ponto específico
-                nova_velocidade = random.randint(30, 60)  # Velocidade aleatória entre 30 e 60
-                cep, _, horario, dias, pouso, tempo = ponto  # Pega os outros valores da tupla sem modificar
-                rota[i] = (cep, nova_velocidade, horario, dias, pouso, tempo)  # Atualiza a tupla apenas com a nova velocidade
+                # Pega os outros valores da tupla sem modificar
+                # Atualiza a tupla apenas com a nova velocidade
+                nova_velocidade = random.randint(30, 60)
+                cep, _, horario, dias, pouso, tempo = ponto
+                rota[i] = (cep, nova_velocidade, horario, dias, pouso, tempo)
 
         # Retorna a rota mutada como tupla
         return tuple(rota)
@@ -131,7 +131,7 @@ class AlgoritmoGenetico:
                 tempo_total += tempo_segmento
                 if pouso:
                     numero_pousos += 1# Fórmula de aptidão: menor distância e pousos são melhores
-            return distancia_total + (numero_pousos * 1000) + tempo_total
+            return distancia_total + (numero_pousos * 2) + tempo_total * 4
 
         # Ordena a população com base na aptidão (menor valor é melhor)
         return sorted(self.populacao, key=calcular_aptidao)
@@ -141,7 +141,8 @@ class AlgoritmoGenetico:
         print("Populacao Inicial Criada")
         melhor_rota_encontrada = None
         menor_distancia = float('inf')
-        for _ in range(self.geracoes):
+        for i in range(self.geracoes):
+            print("Geracao", i + 1)
             # Ordena a população pela aptidão (menor distância)
             populacao_ordenada = self.fitness()
 
@@ -157,7 +158,6 @@ class AlgoritmoGenetico:
             while len(nova_populacao) < self.tamanho_populacao:
                 filho = self.crossover(pai1, pai2)  # Aplica crossover
                 filho_m = self.mutacao(filho)  # Aplica mutação
-                print(filho_m)
                 # Recalcula as variáveis dependentes (velocidade, ângulo, tempo, pousos, etc.)
                 dia = ContadorDeTempo(13, 5)  # Inicializa o contador de tempo
                 self.drone.resetar_drone()  # Recarga o drone
@@ -168,11 +168,16 @@ class AlgoritmoGenetico:
 
                 # Cria um novo indivíduo com as informações recalculadas
                 novo_individuo = [
-                    (cep, velocidade, horario, dias, pouso, tempo)  # Combinando os dados de filho_m com as variáveis recalculadas
-                    for (cep, _, _, _, _, _), velocidade, horario, dias, pouso, tempo in zip(filho_m, velocidades, horarios, dias, pousos, tempos)
+                    (cep, velocidade, horario, dias, pouso, tempo)
+                    for (cep, _, _, _, _, _), velocidade, horario, dias, pouso, tempo in zip(
+                        filho_m,
+                        velocidades,
+                        horarios,
+                        dias,
+                        pousos,
+                        tempos)
                 ]
                 nova_populacao.append(novo_individuo)
-
             self.populacao = nova_populacao
 
             # Atualiza a melhor solução encontrada
