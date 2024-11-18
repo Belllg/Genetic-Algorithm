@@ -1,6 +1,7 @@
-class Vento: 
+"""Carregar Vento"""
+class Vento:
     """Classe para representar e obter as condições de vento."""
-    
+
     def __init__(self):
         """:param ventos: Dicionário com os ventos por dia e horário."""
         self.ventos = {
@@ -117,10 +118,10 @@ class Vento:
     }
 
     def obter_vento(self, dia, horario):
+        """Obtém as condições de vento para o dia e horário dados."""
         if not isinstance(horario, int) or horario < 0:
             raise ValueError("O parâmetro 'horario' deve ser um número inteiro não negativo.")
-        if(dia > 6):
+        if dia > 6:
             return 999999, 90
         hora = horario // 3600  # Horas
-        """Obtém as condições de vento para o dia e horário dados."""
         return self.ventos.get(dia,{}).get(hora,{"velocidade": 0,"direcao": 0})

@@ -1,7 +1,7 @@
 "Classe principal de algoritmo genetico"
 import time
 from src.genetico import AlgoritmoGenetico
-from src.csvManager import CoordenadasCSV
+from src.csv_manager import CoordenadasCSV
 
 inicio = time.time()
 
@@ -12,8 +12,6 @@ ag = AlgoritmoGenetico(ceps_list, tamanho_populacao=50, geracoes=50, taxa_mutaca
 melhor_rota, distancia_minima = ag.evoluir_populacao()
 
 fim = time.time()
-#print("Melhor Rota:", melhor_rota)
+print("Melhor Rota:", melhor_rota)
 print("Distância mínima:", distancia_minima)
 print("Tempo para rodar o programa:", inicio - fim)
-
-

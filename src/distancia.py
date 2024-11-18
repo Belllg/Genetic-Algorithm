@@ -1,7 +1,7 @@
 """Modulo para calcular distancias"""
 import math
 
-def calcularDistancia(cep1, cep2):
+def calcular_distancia(cep1, cep2):
     """Usa a fórmula de Haversine para calcular a distância"""
     # Convertendo as coordenadas de graus para radianos
     lat1, lon1 = math.radians(cep1['latitude']), math.radians(cep1['longitude'])
@@ -28,13 +28,11 @@ def calcular_distancia_total(ceps, rota):
     for i in range(len(rota) - 1):
         cep1 = rota[i][0]
         cep2 = rota[i + 1][0]
-        distancia = calcularDistancia( ceps[cep1],  ceps[cep2])
-        
+        distancia = calcular_distancia( ceps[cep1],  ceps[cep2])
         # Ajustar a distância com base na velocidade e ângulo de voo
         velocidade = rota[i][1]
-        angulo = rota[i][2]
-        # Ajuste de distância com base na velocidade e ângulo
-        distancia_total += distancia * (1 + (0.1 * velocidade / 30))  # Por exemplo, aumentando a distância com maior velocidade
+        distancia_total += distancia * (1 + (0.1 * velocidade / 30))
+        # Por exemplo, aumentando a distância com maior velocidade
     return distancia_total
 
 def calcular_angulo(cep1, cep2):
@@ -58,7 +56,8 @@ def calcular_angulo(cep1, cep2):
 
     # Fórmula para calcular o ângulo
     x = math.sin(delta_lon) * math.cos(lat2_rad)
-    y = math.cos(lat1_rad) * math.sin(lat2_rad) - math.sin(lat1_rad) * math.cos(lat2_rad) * math.cos(delta_lon)
+    y = (math.cos(lat1_rad) * math.sin(lat2_rad)
+     - math.sin(lat1_rad) * math.cos(lat2_rad) * math.cos(delta_lon))
     angulo = math.atan2(x, y)
 
     # Converter de radianos para graus

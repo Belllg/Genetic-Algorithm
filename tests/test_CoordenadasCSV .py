@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import mock_open, patch
-from src.csvManager import CoordenadasCSV  # Supondo que a classe CoordenadasCSV está em src/coordenadas.py
+from src.csv_manager import CoordenadasCSV
 
 class TestCoordenadasCSV(unittest.TestCase):
 

@@ -1,4 +1,7 @@
+"""Simula a passagem de tempo"""
+
 class ContadorDeTempo:
+    """Simula a passagem de tempo"""
     def __init__(self, horas_por_dia, dias):
         """
         Inicializa o contador de tempo.
@@ -21,17 +24,16 @@ class ContadorDeTempo:
     def obter_horario(self):
         """Retorna o horário atual sem formatar."""
         return self.hora_atual
-    
+
     def obter_dia(self):
         """Retorna o dia atual."""
-        dia_atual = self.dia_atual
-        return dia_atual
-    
+        return self.dia_atual
+
     def obter_tempo_restante(self):
         """Obter tem restante"""
         return self.segundos_por_dia - self.hora_atual
-    
-    def obter_tempo_Total(self):
+
+    def obter_tempo_total(self):
         """Obtem o tempo total"""
         return self.total_segundos
 
@@ -44,7 +46,8 @@ class ContadorDeTempo:
         self.hora_atual += segundos
 
         # Verificar se avançou para o próximo dia
-        if self.hora_atual == self.segundos_por_dia:
+        if self.hora_atual >= self.segundos_por_dia:
+            self.hora_atual = 0
             self.avancar_dia()
 
     def avancar_dia(self):
