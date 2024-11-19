@@ -1,7 +1,10 @@
-from src.distancia import distancia, calcular_distancia_total
+"""Teste das distancias"""
 import unittest
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+from distancia import calcular_distancia, calcular_distancia_total
 
-#FIXME REFAZER 
 class TestDistancia(unittest.TestCase):
     """Testando a funcao distancia"""
 
@@ -9,7 +12,7 @@ class TestDistancia(unittest.TestCase):
         """Testa a distância entre dois pontos iguais (deve ser 0 km)"""
         cep1 = {'cep': 1, 'latitude': 0.0, 'longitude': 0.0}
         cep2 = {'cep': 2, 'latitude': 0.0, 'longitude': 0.0}
-        self.assertEqual(distancia(cep1, cep2), 0.0)
+        self.assertEqual(calcular_distancia(cep1, cep2), 0.0)
 
     def test_known_distance(self) -> None:
         """Testa a distância conhecida entre dois pontos"""
@@ -17,7 +20,7 @@ class TestDistancia(unittest.TestCase):
         cep1 = {'cep': 1, 'latitude': -23.550520, 'longitude': -46.633308}  # São Paulo
         cep2 = {'cep': 2, 'latitude': -22.906847, 'longitude': -43.172896}  # Rio de Janeiro
         # Distância aproximada entre São Paulo e Rio de Janeiro: 360.0 km
-        resultado = distancia(cep1, cep2)
+        resultado = calcular_distancia(cep1, cep2)
         # Permite uma variação de 1 km
         self.assertAlmostEqual(resultado, 360.0, delta=5.0)
 
@@ -25,7 +28,7 @@ class TestDistancia(unittest.TestCase):
         """Testa casos limites (distâncias muito pequenas)"""
         cep1 = {'cep': 1, 'latitude': 0.0, 'longitude': 0.0}
         cep2 = {'cep': 2, 'latitude': 0.0001, 'longitude': 0.0001}  # Distância muito pequena
-        resultado = distancia(cep1, cep2)
+        resultado = calcular_distancia(cep1, cep2)
         # Espera-se uma distância muito pequena (em torno de 0.01 km)
         self.assertAlmostEqual(resultado, 0.01, delta=0.1)
 
@@ -34,11 +37,12 @@ class TestDistancia(unittest.TestCase):
         cep1 = {'cep': 1, 'latitude': 90.0, 'longitude': 0.0}  # Polo Norte
         cep2 = {'cep': 2, 'latitude': -90.0, 'longitude': 0.0}  # Polo Sul
         # A distância entre o Polo Norte e o Polo Sul é aproximadamente 20000 km
-        resultado = distancia(cep1, cep2)
+        resultado = calcular_distancia(cep1, cep2)
         self.assertAlmostEqual(resultado, 20000.0, delta=100.0)
 
 
 class TestDistanciaTotal(unittest.TestCase):
+    """Teste da distancia Total de uma rota"""
     def setUp(self):
         """Configura o ambiente para os testes"""
         # Definindo alguns CEPs com coordenadas (latitude, longitude)
@@ -56,7 +60,7 @@ class TestDistanciaTotal(unittest.TestCase):
         # Distância entre cep1 e cep2, e volta de cep2 para cep1
         # (cep1 -> cep2) + (cep2 -> cep1)
         distancia_esperada = 2 * \
-            distancia(self.ceps['cep1'], self.ceps['cep2'])
+            calcular_distancia(self.ceps['cep1'], self.ceps['cep2'])
         self.assertAlmostEqual(resultado, distancia_esperada, places=2)
 
     def test_calcular_distancia_total_com_3_ceps(self):
@@ -64,9 +68,9 @@ class TestDistanciaTotal(unittest.TestCase):
         rota = ['cep1', 'cep2', 'cep3']
         resultado = calcular_distancia_total(rota, self.ceps)
         # Distâncias: cep1 -> cep2, cep2 -> cep3, e volta de cep3 para cep1
-        distancia_esperada = (distancia(self.ceps['cep1'], self.ceps['cep2']) +
-                              distancia(self.ceps['cep2'], self.ceps['cep3']) +
-                              distancia(self.ceps['cep3'], self.ceps['cep1']))
+        distancia_esperada = (calcular_distancia(self.ceps['cep1'], self.ceps['cep2']) +
+                              calcular_distancia(self.ceps['cep2'], self.ceps['cep3']) +
+                              calcular_distancia(self.ceps['cep3'], self.ceps['cep1']))
         self.assertAlmostEqual(resultado, distancia_esperada, places=2)
 
     def test_calcular_distancia_total_com_4_ceps(self):
@@ -74,10 +78,10 @@ class TestDistanciaTotal(unittest.TestCase):
         rota = ['cep1', 'cep2', 'cep3', 'cep4']
         resultado = calcular_distancia_total(rota, self.ceps)
         # Distâncias: cep1 -> cep2, cep2 -> cep3, cep3 -> cep4, e volta de cep4 para cep1
-        distancia_esperada = (distancia(self.ceps['cep1'], self.ceps['cep2']) +
-                              distancia(self.ceps['cep2'], self.ceps['cep3']) +
-                              distancia(self.ceps['cep3'], self.ceps['cep4']) +
-                              distancia(self.ceps['cep4'], self.ceps['cep1']))
+        distancia_esperada = (calcular_distancia(self.ceps['cep1'], self.ceps['cep2']) +
+                              calcular_distancia(self.ceps['cep2'], self.ceps['cep3']) +
+                              calcular_distancia(self.ceps['cep3'], self.ceps['cep4']) +
+                              calcular_distancia(self.ceps['cep4'], self.ceps['cep1']))
         self.assertAlmostEqual(resultado, distancia_esperada, places=2)
 
     def test_calcular_distancia_total_com_uma_rota(self):
