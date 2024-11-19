@@ -8,7 +8,7 @@ from src.drone import Drone
 
 class AlgoritmoGenetico:
     """Classe do algoritmo genético"""
-    def __init__(self, ceps, tamanho_populacao, geracoes, taxa_mutacao):
+    def __init__(self, ceps, tamanho_populacao, geracoes, taxa_mutacao, porcentagem_aleatoria):
         """
         Inicializa o Algoritmo Genético com os parâmetros fornecidos.
         
@@ -17,10 +17,12 @@ class AlgoritmoGenetico:
         :param geracoes: Número de gerações para o algoritmo evoluir.
         :param taxa_mutacao: Taxa de mutação para alterar rotas ligeiramente.
         """
+        self.distancias_cache = {}
         self.ceps = ceps
         self.tamanho_populacao = tamanho_populacao
         self.geracoes = geracoes
         self.taxa_mutacao = taxa_mutacao
+        self.porcentagem_aleatoria = porcentagem_aleatoria
         self.primeiro = ceps[0]
         self.vento = Vento()
         self.drone = Drone()
@@ -129,64 +131,67 @@ class AlgoritmoGenetico:
             distancia_total = 0
             tempo_total = 0
             numero_pousos = 0
-            for segmento in individuo:
+            for i, segmento in enumerate(individuo):
                 _, _, _, _, pouso, tempo_segmento = segmento
-                distancia_total += calcular_distancia(
-                    self.ceps[segmento[0]],
-                    self.ceps[individuo[(individuo.index(segmento) + 1) % len(individuo)][0]]
-                )
+                proximo_cep = individuo[(i + 1) % len(individuo)][0]
+                distancia_total +=self.calcular_distancia_cache(segmento[0], proximo_cep)
                 tempo_total += tempo_segmento
                 if pouso:
-                    numero_pousos += 1# Fórmula de aptidão: menor distância e pousos são melhores
-            return distancia_total + (numero_pousos * 2) + tempo_total * 4
+                    numero_pousos += 1
+
+            # Fórmula de aptidão: menor distância, menos pousos e menor tempo são melhores
+            return distancia_total * 0.4 + (numero_pousos * 0.2) + tempo_total * 0.6
 
         # Ordena a população com base na aptidão (menor valor é melhor)
         return sorted(self.populacao, key=calcular_aptidao)
 
     def evoluir_populacao(self):
-        """Evolui a população através de elitismo, crossover e mutação"""
-        print("Populacao Inicial Criada")
+        """Evolui a população através de elitismo, crossover, mutação e população nova."""
         melhor_rota_encontrada = None
         menor_distancia = float('inf')
+
         for i in range(self.geracoes):
-            print("Geracao", i + 1)
-            # Ordena a população pela aptidão (menor distância)
+            print(f"Geracao {i + 1}")
             populacao_ordenada = self.fitness()
 
-            # Verifica se a população está vazia
             if len(populacao_ordenada) < 2:
                 raise ValueError("A população inicial ou gerada está vazia.")
 
-            #Seleciona os dois melhores indivíduos (elitismo)
+            # Elitismo: mantém os melhores
             nova_populacao = populacao_ordenada[:2]
-            pai1, pai2 = nova_populacao[0], nova_populacao[1]  # Pais já estão na nova_populacao
 
-            # Gera o restante da nova população com crossover e mutação
+            # Gera indivíduos aleatórios para completar a população
+            num_aleatorios = int(self.tamanho_populacao * self.porcentagem_aleatoria)
+            while len(nova_populacao) < num_aleatorios + 2:
+                rota = [0] + random.sample(range(1, len(self.ceps)), len(self.ceps) - 1) + [0]
+                voo_velocidade = [random.randint(30, 60) for _ in range(len(rota))]
+                dia = ContadorDeTempo(13, 5)
+
+                self.drone.resetar_drone()
+                velocidades, horarios, dias, pousos, tempos = simular(self, rota, dia, voo_velocidade)
+
+                individuo = tuple(zip(rota, velocidades, horarios, dias, pousos, tempos))
+                if individuo not in nova_populacao:
+                    nova_populacao.append(individuo)
+
+            # Completa a população com crossover e mutação
+            metade_populacao = len(populacao_ordenada) // 2
             while len(nova_populacao) < self.tamanho_populacao:
-                filho = self.crossover(pai1, pai2)  # Aplica crossover
-                filho_m = self.mutacao(filho)  # Aplica mutação
-                # Recalcula as variáveis dependentes (velocidade, ângulo, tempo, pousos, etc.)
-                dia = ContadorDeTempo(13, 5)  # Inicializa o contador de tempo
-                self.drone.resetar_drone()  # Recarga o drone
-                velocidades, horarios, dias, pousos, tempos = simular_tuple(self,
-                                                                            filho_m,
-                                                                            dia,
-                                                                            [x[1] for x in filho_m])
-                # Cria um novo indivíduo com as informações recalculadas
+                pai1, pai2 = random.sample(populacao_ordenada[:metade_populacao], 2)
+                filho = self.mutacao(self.crossover(pai1, pai2))
+
+                dia = ContadorDeTempo(13, 5)
+                self.drone.resetar_drone()
+                velocidades, horarios, dias, pousos, tempos = simular_tuple(self, filho, dia, [x[1] for x in filho])
+
                 novo_individuo = [
-                    (cep, velocidade, horario, dias, pouso, tempo)
-                    for (cep, _, _, _, _, _), velocidade, horario, dias, pouso, tempo in zip(
-                        filho_m,
-                        velocidades,
-                        horarios,
-                        dias,
-                        pousos,
-                        tempos)
+                    (cep, vel, hor, d, p, temp)
+                    for (cep, _, _, _, _, _), vel, hor, d, p, temp in zip(filho, velocidades, horarios, dias, pousos, tempos)
                 ]
                 nova_populacao.append(novo_individuo)
+
             self.populacao = nova_populacao
 
-            # Atualiza a melhor solução encontrada
             for rota in self.populacao:
                 distancia_atual = calcular_distancia_total(self.ceps, list(rota))
                 if distancia_atual < menor_distancia:
@@ -194,3 +199,11 @@ class AlgoritmoGenetico:
                     melhor_rota_encontrada = rota
 
         return melhor_rota_encontrada, menor_distancia
+
+    def calcular_distancia_cache(self, cep1, cep2):
+        """Retorna a distância entre dois CEPs, utilizando cache para evitar cálculos repetidos."""
+        if (cep1, cep2) not in self.distancias_cache:
+            distancia = calcular_distancia(self.ceps[cep1], self.ceps[cep2])
+            self.distancias_cache[(cep1, cep2)] = distancia
+            self.distancias_cache[(cep2, cep1)] = distancia  # Distância é simétrica
+        return self.distancias_cache[(cep1, cep2)]

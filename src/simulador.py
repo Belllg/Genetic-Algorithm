@@ -54,14 +54,13 @@ def simular_tuple(self, rota, dia, voo_velocidade):
     i = 0
 
     while i < len(rota):  # Condição correta para percorrer todos os elementos de 0 a len(rota)-1
-        print("I:", i, "Len Rota:", len(rota))
         # Verifica se é o último item, para fazer a conexão de volta ao início
         if i == len(rota) - 1:
-            cep1 = rota[i]  # O último item
-            cep2 = rota[0]  # Conecta de volta ao primeiro item
+            cep1 = rota[i][0]  # O último item
+            cep2 = rota[0][0]  # Conecta de volta ao primeiro item
         else:
-            cep1 = rota[i]  # Item atual
-            cep2 = rota[i + 1]  # Próximo item
+            cep1 = rota[i][0]  # Item atual
+            cep2 = rota[i + 1][0]  # Próximo item
 
         voo_angulo = calcular_angulo(self.ceps[cep1], self.ceps[cep2])
         distancia = calcular_distancia(self.ceps[cep1], self.ceps[cep2])
@@ -93,8 +92,6 @@ def simular_tuple(self, rota, dia, voo_velocidade):
         # Se o drone deve parar, avançamos o dia e repetimos a iteração
         if parar:
             dia.avancar_dia()
-            i -= 1  # Reduz o índice para repetir a iteração anterior
-            i = max(i, 0)  # Garante que o índice não chegue a valores negativos
         i += 1  # Avança para o próximo índice
 
     return velocidades, horarios, dias, pousos, tempos

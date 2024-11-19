@@ -44,6 +44,11 @@ def gerar_solucao(melhor_rota, ceps):
         index_inicial = melhor_rota[i][0]  # O valor de index é o número de 0 a 49
         index_final = melhor_rota[i + 1][0]  # O valor de index é o número de 0 a 49
 
+        # Verifique se o índice está dentro do intervalo da lista de ceps
+        if index_inicial >= len(ceps) or index_final >= len(ceps):
+            print(f"Erro: índice fora do intervalo para os ceps. Índices: {index_inicial}, {index_final}, Tamanho da lista de ceps: {len(ceps)}")
+            continue  # Ou raise um erro, dependendo da lógica que você deseja seguir
+
         # Recupera o CEP de acordo com o índice da melhor rota
         cep_inicial = ceps[index_inicial]['cep']
         cep_final = ceps[index_final]['cep']

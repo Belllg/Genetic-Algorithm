@@ -8,7 +8,12 @@ inicio = time.time()
 ceps_list = CoordenadasCSV('data/coordenadas.csv').carregar_csv()
 #ceps_list = CoordenadasCSV('data/coordenadasMenores.csv').carregar_csv()
 
-ag = AlgoritmoGenetico(ceps_list, tamanho_populacao=1200, geracoes=130, taxa_mutacao=0.03)
+ag = AlgoritmoGenetico(ceps_list,
+                       tamanho_populacao=1200,
+                       geracoes=200,
+                       taxa_mutacao=0.06,
+                       porcentagem_aleatoria=0.4)
+
 melhor_rota, distancia_minima = ag.evoluir_populacao()
 
 fim = time.time()
