@@ -1,7 +1,7 @@
 """Modulo com funções de Evolucao"""
 import random
 from src.distancia import calcular_distancia, calcular_distancia_total
-from src.simulador import simular, simular_tuple
+from src.simulador import simular#, simular_tuple
 from src.dia import ContadorDeTempo
 from src.vento import Vento
 from src.drone import Drone
@@ -31,12 +31,10 @@ class AlgoritmoGenetico:
         populacao_inicial = set()
         while len(populacao_inicial) < self.tamanho_populacao:
             # Ajustado para garantir que o primeiro item fique fixo
-            indices_intermediarios = random.sample(range(1, len(self.ceps)), len(self.ceps) - 1)
-
+            indices_meio = random.sample(range(1, len(self.ceps)), len(self.ceps) - 1)
             # Constrói a rota garantindo que o primeiro item seja fixo e o último seja aleatório
-            rota = [0] + indices_intermediarios[1:]
-            rota += [0]
-            voo_velocidade = [random.randint(30, 60) for _ in range(len(self.ceps))]
+            rota = [0]+ indices_meio[1:] + [0]
+            voo_velocidade = [random.randint(30, 60) for _ in range(len(rota))]
             dia = ContadorDeTempo(13, 5)
 
             # Simula o voo com a rota e coleta os dados
@@ -161,34 +159,34 @@ class AlgoritmoGenetico:
                 raise ValueError("A população inicial ou gerada está vazia.")
 
             # Seleciona os dois melhores indivíduos (elitismo)
-            nova_populacao = populacao_ordenada[:2]
-            pai1, pai2 = nova_populacao[0], nova_populacao[1]  # Pais já estão na nova_populacao
-
-            # Gera o restante da nova população com crossover e mutação
-            while len(nova_populacao) < self.tamanho_populacao:
-                filho = self.crossover(pai1, pai2)  # Aplica crossover
-                filho_m = self.mutacao(filho)  # Aplica mutação
-                # Recalcula as variáveis dependentes (velocidade, ângulo, tempo, pousos, etc.)
-                dia = ContadorDeTempo(13, 5)  # Inicializa o contador de tempo
-                self.drone.resetar_drone()  # Recarga o drone
-                velocidades, horarios, dias, pousos, tempos = simular_tuple(self,
-                                                                            filho_m,
-                                                                            dia,
-                                                                            [x[1] for x in filho_m])
-
-                # Cria um novo indivíduo com as informações recalculadas
-                novo_individuo = [
-                    (cep, velocidade, horario, dias, pouso, tempo)
-                    for (cep, _, _, _, _, _), velocidade, horario, dias, pouso, tempo in zip(
-                        filho_m,
-                        velocidades,
-                        horarios,
-                        dias,
-                        pousos,
-                        tempos)
-                ]
-                nova_populacao.append(novo_individuo)
-            self.populacao = nova_populacao
+            #nova_populacao = populacao_ordenada[:2]
+            #pai1, pai2 = nova_populacao[0], nova_populacao[1]  # Pais já estão na nova_populacao
+#
+#            ## Gera o restante da nova população com crossover e mutação
+#            #while len(nova_populacao) < self.tamanho_populacao:
+#            #    filho = self.crossover(pai1, pai2)  # Aplica crossover
+#            #    filho_m = self.mutacao(filho)  # Aplica mutação
+#            #    # Recalcula as variáveis dependentes (velocidade, ângulo, tempo, pousos, etc.)
+#            #    dia = ContadorDeTempo(13, 5)  # Inicializa o contador de tempo
+#            #    self.drone.resetar_drone()  # Recarga o drone
+#            #    velocidades, horarios, dias, pousos, tempos = simular_tuple(self,
+#            #                                                                filho_m,
+#            #                                                                dia,
+#            #                                                              [x[1] for x in filho_m])
+#
+#            #    # Cria um novo indivíduo com as informações recalculadas
+#            #    novo_individuo = [
+#            #        (cep, velocidade, horario, dias, pouso, tempo)
+#            #        for (cep, _, _, _, _, _), velocidade, horario, dias, pouso, tempo in zip(
+#            #            filho_m,
+#            #            velocidades,
+#            #            horarios,
+#            #            dias,
+            #            pousos,
+            #            tempos)
+            #    ]
+            #    nova_populacao.append(novo_individuo)
+            #self.populacao = nova_populacao
 
             # Atualiza a melhor solução encontrada
             for rota in self.populacao:

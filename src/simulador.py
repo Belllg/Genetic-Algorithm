@@ -5,9 +5,14 @@ def simular(self, rota, dia, voo_velocidade):
     """Verificar rota e velocidade com o drone"""
     velocidades, horarios, dias, pousos, tempos = [], [], [], [], []
     i = 0
-    while i < len(rota) - 1:
-        cep1 = rota[i]
-        cep2 = rota[i + 1]
+    while i < len(rota):  # Condição correta para percorrer todos os elementos de 0 a len(rota)-1
+        # Verifica se é o último item, para fazer a conexão de volta ao início
+        if i == len(rota) - 1:
+            cep1 = rota[i]  # O último item
+            cep2 = rota[0]  # Conecta de volta ao primeiro item
+        else:
+            cep1 = rota[i]  # Item atual
+            cep2 = rota[i + 1]  # Próximo item
         # Calcula o ângulo de voo e a distância entre os pontos
         voo_angulo = calcular_angulo(self.ceps[cep1], self.ceps[cep2])
         distancia = calcular_distancia(self.ceps[cep1], self.ceps[cep2])
@@ -39,8 +44,6 @@ def simular(self, rota, dia, voo_velocidade):
         # Se o drone deve parar, avançamos o dia e repetimos a iteração
         if parar:
             dia.avancar_dia()
-            i -= 1  # Reduz o índice para repetir a iteração anterior
-            i = max(i, 0)#garante que ele n chegue a zero
         i += 1  # Avança para o próximo índice
 
     return velocidades, horarios, dias, pousos, tempos
@@ -50,9 +53,15 @@ def simular_tuple(self, rota, dia, voo_velocidade):
     velocidades, horarios, dias, pousos, tempos = [], [], [], [], []
     i = 0
 
-    while i < len(rota) - 1:
-        cep1 = rota[i][0]  # Aqui você pega a tupla (cep, velocidade)
-        cep2 = rota[i + 1][0]  # Aqui você pega a próxima tupla (cep, velocidade)
+    while i < len(rota):  # Condição correta para percorrer todos os elementos de 0 a len(rota)-1
+        print("I:", i, "Len Rota:", len(rota))
+        # Verifica se é o último item, para fazer a conexão de volta ao início
+        if i == len(rota) - 1:
+            cep1 = rota[i]  # O último item
+            cep2 = rota[0]  # Conecta de volta ao primeiro item
+        else:
+            cep1 = rota[i]  # Item atual
+            cep2 = rota[i + 1]  # Próximo item
 
         voo_angulo = calcular_angulo(self.ceps[cep1], self.ceps[cep2])
         distancia = calcular_distancia(self.ceps[cep1], self.ceps[cep2])
