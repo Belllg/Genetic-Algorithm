@@ -21,6 +21,7 @@ class AlgoritmoGenetico:
         self.tamanho_populacao = tamanho_populacao
         self.geracoes = geracoes
         self.taxa_mutacao = taxa_mutacao
+        self.primeiro = ceps[0]
         self.vento = Vento()
         self.drone = Drone()
         self.populacao = self.criar_populacao_inicial()
@@ -29,8 +30,12 @@ class AlgoritmoGenetico:
         """Cria a população inicial """
         populacao_inicial = set()
         while len(populacao_inicial) < self.tamanho_populacao:
-             # Gera uma rota aleatória
-            rota = random.sample(range(len(self.ceps)), len(self.ceps))
+            # Ajustado para garantir que o primeiro item fique fixo
+            indices_intermediarios = random.sample(range(1, len(self.ceps)), len(self.ceps) - 1)
+
+            # Constrói a rota garantindo que o primeiro item seja fixo e o último seja aleatório
+            rota = [0] + indices_intermediarios[1:]
+            rota += [0]
             voo_velocidade = [random.randint(30, 60) for _ in range(len(self.ceps))]
             dia = ContadorDeTempo(13, 5)
 
@@ -49,68 +54,73 @@ class AlgoritmoGenetico:
         return list(populacao_inicial)
 
     def crossover(self, pai1, pai2):
-        """Função de crossover para gerar um filho considerando rotas e velocidades"""
+        """Função de crossover para gerar um filho considerando todas as rotas e velocidades"""
+        # Remove o primeiro e o último elementos
+        inicio_pai1, fim_pai1 = pai1[0], pai1[-1]
+
+        pai1_corte = pai1[1:-1]  # Elementos intermediários de pai1
+        pai2_corte = pai2[1:-1]  # Elementos intermediários de pai2
+
         # Define pontos de início e fim para o crossover
-        inicio = random.randint(0, len(pai1) - 2)
-        fim = random.randint(inicio + 1, len(pai1) - 1)
+        inicio = random.randint(0, len(pai1_corte) - 2)
+        fim = random.randint(inicio + 1, len(pai1_corte) - 1)
 
-        # Inicializa o filho com parte da rota e velocidades do pai1
-        filho_rota = list(pai1[inicio:fim])
-        filho_velocidades = list([p[1] for p in pai1[inicio:fim]])
+        # Inicializa o filho com parte das rotas e velocidades do pai1
+        filho_segmento = pai1_corte[inicio:fim]
+        filho_segmento = list(filho_segmento)
+        # Adiciona os pontos de pai2 que não estão no segmento
+        for ponto in pai2_corte:
+            if ponto not in filho_segmento:
+                filho_segmento.append(ponto)
 
-        # Adiciona os pontos e velocidades de pai2 que não estão no filho
-        for i, ponto in enumerate(pai2):
-            if ponto not in filho_rota:
-                filho_rota.append(ponto)
-                filho_velocidades.append(pai2[i][1])  # Adiciona a velocidade correspondente de pai2
+        # Garante que o filho tenha a mesma quantidade de pontos que o pai
+        if len(filho_segmento) < len(pai1_corte):
+            for ponto in pai1_corte:
+                if ponto not in filho_segmento:
+                    filho_segmento.append(ponto)
 
-        # Garante que o filho tenha a mesma quantidade de pontos e velocidades que os pais
-        if len(filho_rota) < len(pai1):
-            for i, ponto in enumerate(pai1):
-                if ponto not in filho_rota:
-                    filho_rota.append(ponto)
-                    filho_velocidades.append(pai1[i][1])
+        # Reconstrói a rota completa adicionando os elementos removidos
+        filho_completo = [inicio_pai1] + filho_segmento + [fim_pai1]
 
-        # Agora, criamos a nova população de maneira correta
-        filho = []
-        for i, ponto in enumerate(filho_rota):
-            # Para cada ponto da rota, cria-se uma tupla (cep, velocidade, horario, pouso, tempo)
-            filho.append((filho_rota[i][0],   # Cep
-                        filho_velocidades[i],  # Velocidade
-                        ponto[2],  # Horário do ponto (substitua conforme necessário)
-                        ponto[3],  # dias (substitua conforme necessário)
-                        ponto[4],  # Pouso (substitua conforme necessário)
-                        ponto[5]))  # Tempo (substitua conforme necessário)
-        return filho
+        return filho_completo
 
     def mutacao(self, rota):
-        """Função de mutação para alterar o cep e a velocidade da rota"""
+        """Função de mutação para alterar o cep e a velocidade da rota,
+        garantindo que o primeiro e o último ponto não sejam alterados."""
         rota = list(rota)  # Converte a rota para lista para permitir alterações
 
-        # Aplica a troca de cep e velocidade com probabilidade de mutação
-        for i, ponto in enumerate(rota):  # Percorre cada elemento da rota
-            if random.random() < self.taxa_mutacao:
-                j = random.randint(0, len(rota) - 1)  # Escolhe um índice aleatório
-                # Troca o cep e a velocidade de i e j
-                cep_i, velocidade_i, horario_i, dia_i, pouso_i, tempo_i = rota[i]
-                cep_j, velocidade_j, horario_j, dia_j, pouso_j, tempo_j = rota[j]
+        # Remove o primeiro e o último ponto
+        inicio = rota[0]
+        fim = rota[-1]
+        rota_intermediaria = rota[1:-1]
 
-                # Realiza a troca dos cêps e das velocidades, mas mantém os outros valores
-                rota[i] = (cep_j, velocidade_i, horario_i, dia_i, pouso_i, tempo_i)
-                rota[j] = (cep_i, velocidade_j, horario_j, dia_j, pouso_j, tempo_j)
-
-        # Modificar aleatoriamente a velocidade de um ponto da rota
-        for i, ponto in enumerate(rota):  # Percorre cada ponto da rota
+        # Aplica a mutação nos pontos intermediários
+        for i, ponto in enumerate(rota_intermediaria):
             if random.random() < self.taxa_mutacao:
-                # Modifica aleatoriamente a velocidade de um ponto específico
-                # Pega os outros valores da tupla sem modificar
-                # Atualiza a tupla apenas com a nova velocidade
+                # Escolhe um índice aleatório dentro dos intermediários
+                j = random.randint(0, len(rota_intermediaria) - 1)
+
+                # Realiza a troca de cep e velocidade entre i e j
+                cep_i, velocidade_i, horario_i, dia_i, pouso_i, tempo_i = rota_intermediaria[i]
+                cep_j, velocidade_j, horario_j, dia_j, pouso_j, tempo_j = rota_intermediaria[j]
+
+                rota_intermediaria[i] = (cep_j, velocidade_i, horario_i, dia_i, pouso_i, tempo_i)
+                rota_intermediaria[j] = (cep_i, velocidade_j, horario_j, dia_j, pouso_j, tempo_j)
+
+        # Modificar aleatoriamente a velocidade de um ponto intermediário
+        for i, ponto in enumerate(rota_intermediaria):
+            if random.random() < self.taxa_mutacao:
+                # Modifica aleatoriamente a velocidade
                 nova_velocidade = random.randint(30, 60)
-                cep, _, horario, dias, pouso, tempo = ponto
-                rota[i] = (cep, nova_velocidade, horario, dias, pouso, tempo)
+                cep, _, horario, dia, pouso, tempo = ponto
+                rota_intermediaria[i] = (cep, nova_velocidade, horario, dia, pouso, tempo)
+
+        # Recompõe a rota com os pontos fixos no início e no fim
+        rota_mutada = [inicio] + rota_intermediaria + [fim]
 
         # Retorna a rota mutada como tupla
-        return tuple(rota)
+        return tuple(rota_mutada)
+
 
     def fitness(self):
         """

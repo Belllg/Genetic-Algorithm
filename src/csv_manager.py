@@ -40,9 +40,13 @@ def gerar_solucao(melhor_rota, ceps):
     coordenadas_dict = {coord['cep']: (coord['latitude'], coord['longitude']) for coord in ceps}
 
     for i in range(len(melhor_rota) - 1):
-        cep_inicial, velocidade, horario_inicial, dia, pouso, _ = melhor_rota[i]
-        cep_final, _, horario_final, _, _, _ = melhor_rota[i + 1]
-        
+        # Acessa o índice do CEP na melhor rota e usa esse índice para pegar o CEP
+        index_inicial = melhor_rota[i][0]  # O valor de index é o número de 0 a 49
+        index_final = melhor_rota[i + 1][0]  # O valor de index é o número de 0 a 49
+
+        # Recupera o CEP de acordo com o índice da melhor rota
+        cep_inicial = ceps[index_inicial]['cep']
+        cep_final = ceps[index_final]['cep']
 
         # Recupera as coordenadas dos CEPs
         lat_inicial, lon_inicial = coordenadas_dict.get(cep_inicial, (None, None))
@@ -53,14 +57,14 @@ def gerar_solucao(melhor_rota, ceps):
             "CEP inicial": cep_inicial,
             "Latitude inicial": lat_inicial,
             "Longitude inicial": lon_inicial,
-            "Dia do voo": dia,  # Extraímos o dia da data/hora
-            "Hora inicial": horario_inicial.split(' ')[1],  # Extraímos a hora da data/hora
-            "Velocidade": velocidade,
+            "Dia do voo": melhor_rota[i][3],  # Extraímos o dia da data/hora
+            "Hora inicial": melhor_rota[i][2],  # Extraímos a hora da data/hora
+            "Velocidade": melhor_rota[i][1],
             "CEP final": cep_final,
             "Latitude final": lat_final,
             "Longitude final": lon_final,
-            "Pouso": pouso,
-            "Hora final": horario_final
+            "Pouso": melhor_rota[i][4],
+            "Hora final": melhor_rota[i + 1][2]  # A hora final é de `melhor_rota[i + 1]`
         })
 
     return solucao
