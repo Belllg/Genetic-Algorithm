@@ -1,12 +1,8 @@
 """Teste Unitario do csv_manager"""
 import unittest
 import csv
-import sys
-import os
 from unittest.mock import mock_open, patch
-# Adiciona o diretório src ao caminho de busca de módulos
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
-from csv_manager import CoordenadasCSV, salvar_csv, gerar_solucao
+from src.csv_manager import CoordenadasCSV, salvar_csv, gerar_solucao
 
 class TestCoordenadasCSV(unittest.TestCase):
     """"Teste de carregar csv"""

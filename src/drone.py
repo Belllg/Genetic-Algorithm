@@ -30,7 +30,7 @@ class Drone:
         while  iteracoes < max_iteracoes:
             iteracoes += 1
             if velocidade < 30:
-                return 0, 0, 0
+                return 0, 30, 0
             # Ajustar a velocidade considerando o vento
             velocidade_ajustada = self.ajustar_velocidade_com_vento(
                 velocidade,
@@ -39,7 +39,7 @@ class Drone:
                 angulo_voo)
             # Convertendo a velocidade ajustada de km/h para km/s
             if velocidade_ajustada <= 0:
-                return 0, 0, 0
+                return 0, 30, 0
             velocidade_kmps = velocidade_ajustada / 3600  # Km/s
             # Calcula o tempo de voo
             tempo_voo = distancia / velocidade_kmps  # em segundos
@@ -61,7 +61,7 @@ class Drone:
         if iteracoes > max_iteracoes:
             print ("Alcance, Distancia, Bateria",alcance, distancia, self.bateria)
             print("Fracasso")
-            return 0, 0, 0
+            return 0, 30, 0
         # Retorna os valores calculados
         return math.ceil(tempo_voo), velocidade, consumo_bateria
 

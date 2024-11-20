@@ -36,7 +36,7 @@ class AlgoritmoGenetico:
             indices_meio = random.sample(range(1, len(self.ceps)), len(self.ceps) - 1)
             # Constrói a rota garantindo que o primeiro item seja fixo e o último seja aleatório
             rota = [0]+ indices_meio[1:] + [0]
-            voo_velocidade = [random.randint(45, 60) for _ in range(len(rota))]
+            voo_velocidade = [random.randint(30, 60) for _ in range(len(rota))]
             dia = ContadorDeTempo(13, 5)
 
             # Simula o voo com a rota e coleta os dados
@@ -82,7 +82,7 @@ class AlgoritmoGenetico:
 
         if random.random() < self.taxa_mutacao:
             ponto = random.randint(1, len(rota) - 2)
-            nova_velocidade = max(45, min(60, rota[ponto][1] + random.choice([-5, 5])))
+            nova_velocidade = max(35, min(60, rota[ponto][1] + random.choice([-5, 5])))
             rota[ponto] = (rota[ponto][0], nova_velocidade, *rota[ponto][2:])
 
         return tuple(rota)
@@ -106,7 +106,7 @@ class AlgoritmoGenetico:
                     numero_pousos += 1
 
             # Fórmula de aptidão: menor distância, menos pousos e menor tempo são melhores
-            return distancia_total * 0.2 + (numero_pousos * 0.1) + tempo_total * 0.9
+            return distancia_total * 1.2 + (numero_pousos * 0.1) + tempo_total * 2
 
         # Ordena a população com base na aptidão (menor valor é melhor)
         return sorted(self.populacao, key=calcular_aptidao)
@@ -130,11 +130,14 @@ class AlgoritmoGenetico:
             num_aleatorios = int(self.tamanho_populacao * self.porcentagem_aleatoria)
             while len(nova_populacao) < num_aleatorios + 2:
                 rota = [0] + random.sample(range(1, len(self.ceps)), len(self.ceps) - 1) + [0]
-                voo_velocidade = [random.randint(45, 60) for _ in range(len(rota))]
+                voo_velocidade = [random.randint(35, 60) for _ in range(len(rota))]
                 dia = ContadorDeTempo(13, 5)
 
                 self.drone.resetar_drone()
-                velocidades, horarios, dias, pousos, tempos = simular(self, rota, dia, voo_velocidade)
+                velocidades, horarios, dias, pousos, tempos = simular(self,
+                                                                      rota,
+                                                                      dia,
+                                                                      voo_velocidade)
 
                 individuo = tuple(zip(rota, velocidades, horarios, dias, pousos, tempos))
                 if individuo not in nova_populacao:
@@ -148,11 +151,19 @@ class AlgoritmoGenetico:
 
                 dia = ContadorDeTempo(13, 5)
                 self.drone.resetar_drone()
-                velocidades, horarios, dias, pousos, tempos = simular_tuple(self, filho, dia, [x[1] for x in filho])
+                velocidades, horarios, dias, pousos, tempos = simular_tuple(self,
+                                                                            filho,
+                                                                            dia,
+                                                                            [x[1] for x in filho])
 
                 novo_individuo = [
                     (cep, vel, hor, d, p, temp)
-                    for (cep, _, _, _, _, _), vel, hor, d, p, temp in zip(filho, velocidades, horarios, dias, pousos, tempos)
+                    for (cep, _, _, _, _, _), vel, hor, d, p, temp in zip(filho,
+                                                                          velocidades,
+                                                                          horarios,
+                                                                          dias,
+                                                                          pousos,
+                                                                          tempos)
                 ]
                 nova_populacao.append(novo_individuo)
 

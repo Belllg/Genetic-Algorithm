@@ -9,10 +9,10 @@ ceps_list = CoordenadasCSV('data/coordenadas.csv').carregar_csv()
 #ceps_list = CoordenadasCSV('data/coordenadasMenores.csv').carregar_csv()
 
 ag = AlgoritmoGenetico(ceps_list,
-                       tamanho_populacao=1500,
-                       geracoes=50,
-                       taxa_mutacao=0.09,
-                       porcentagem_aleatoria=0.3)
+                       tamanho_populacao= 120,
+                       geracoes= 3600,
+                       taxa_mutacao= 0.08,
+                       porcentagem_aleatoria= 0.2)
 
 melhor_rota, distancia_minima = ag.evoluir_populacao()
 

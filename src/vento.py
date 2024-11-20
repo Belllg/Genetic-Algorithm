@@ -122,6 +122,16 @@ class Vento:
         if not isinstance(horario, int) or horario < 0:
             raise ValueError("O parâmetro 'horario' deve ser um número inteiro não negativo.")
         if dia > 6:
-            return 999999, 90
-        hora = horario // 3600  # Horas
-        return self.ventos.get(dia,{}).get(hora,{"velocidade": 0,"direcao": 0})
+            return 0, 90
+
+        # Calcula a hora em formato inteiro (não precisa somar 6)
+        hora = horario // 3600 # Hora inteira
+
+        # Ajuste para a chave de horário
+        hora_str = f"{hora:02d}:00:00"  # Formata para 'hh:00:00'
+
+        # Tenta acessar o vento no dicionário
+        vento = self.ventos.get(dia, {}).get(hora_str, {"velocidade": 0, "direcao": 0})
+
+        # Retorna a tupla com velocidade e direção
+        return vento["velocidade"], vento["direcao"]

@@ -19,7 +19,7 @@ def simular(self, rota, dia, voo_velocidade):
 
         # Obtemos o vento para o dia e horário atual
         vento = self.vento.obter_vento(dia.obter_dia(), dia.obter_horario())
-        vento_velocidade, vento_direcao = vento["velocidade"], vento["direcao"]
+        vento_velocidade, vento_direcao = vento[0], vento[1]
 
         #Realizamos o Voo
         tempo_voo, velocidade, pouso, parar = self.drone.realizar_voo(
@@ -38,7 +38,7 @@ def simular(self, rota, dia, voo_velocidade):
         dias.append(dia.obter_dia())
 
         # Se o voo foi bem-sucedido, atualiza o tempo total
-        tempo_total = dia.obter_tempo_total() if tempo_voo != 0 else 99999999
+        tempo_total = dia.obter_tempo_total()
         tempos.append(tempo_total)
 
         # Se o drone deve parar, avançamos o dia e repetimos a iteração
@@ -67,7 +67,7 @@ def simular_tuple(self, rota, dia, voo_velocidade):
 
         # Obtém o vento para o dia e horário atual
         vento = self.vento.obter_vento(dia.obter_dia(), dia.obter_horario())
-        vento_velocidade, vento_direcao = vento["velocidade"], vento["direcao"]
+        vento_velocidade, vento_direcao = vento[0], vento[1]
 
         # Realiza o voo
         tempo_voo, velocidade, pouso, parar = self.drone.realizar_voo(
@@ -86,7 +86,7 @@ def simular_tuple(self, rota, dia, voo_velocidade):
         dias.append(dia.obter_dia())
 
         # Se o voo foi bem-sucedido, atualiza o tempo total
-        tempo_total = dia.obter_tempo_total() if tempo_voo != 0 else 99999999
+        tempo_total = dia.obter_tempo_total()
         tempos.append(tempo_total)
 
         # Se o drone deve parar, avançamos o dia e repetimos a iteração
